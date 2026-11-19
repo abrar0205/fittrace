@@ -1,0 +1,19 @@
+[tool.pytest.ini_options]
+testpaths = ["tests/unit", "tests/integration"]
+addopts = "-q"
+markers = ["integration: requires PostgreSQL (FITTRACE_TEST_DATABASE_URL)"]
+
+[tool.ruff]
+line-length = 135
+target-version = "py311"
+extend-exclude = ["apps/web", "data", "database/migrations/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "BLE"]
+ignore = ["S101", "S311", "S608", "B008", "UP040", "UP046"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "B"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["fittrace", "app"]

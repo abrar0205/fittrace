@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fittrace"
+version = "1.0.0"
+description = "FitTrace scientific core: calibrated synthetic panel geometry, gap measurement, manufacturing simulation and quality analytics."
+requires-python = ">=3.11"
+dependencies = [
+  "numpy>=1.26",
+  "scipy>=1.11",
+  "opencv-python-headless>=4.8",
+  "pandas>=2.1",
+]
+
+[tool.setuptools.packages.find]
+include = ["fittrace*"]
