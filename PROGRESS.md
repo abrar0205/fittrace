@@ -20,13 +20,13 @@ Last updated: 19 Nov 2026. Everything below was executed in the development envi
 | Frontend: 7 sheets | Inspected in Chrome at 1440 and 1920 px; scan reveal, loupe, row profile, chart click-through and verification polling exercised; layout defects found in review were fixed (viewer overflow, scaled SVG text, label collisions, table overflow) |
 | Frontend checks | ESLint and `tsc` clean; 12 Vitest tests; 2 Playwright e2e tests pass against both the dev server and the production build served by the API |
 | Lint | `ruff check .` clean |
+| GitHub Actions | Passed on PR #1: `python` (ruff, 62 tests on a PostgreSQL 16 service, OpenAPI drift check), `web` (type drift, lint, tsc, Vitest, build), `e2e` (fresh migrate + seed, Playwright against the API-served build) |
 
 ## Not done or not verified
 
 | Item | Status |
 |---|---|
 | Docker image and `docker compose` | Written, **not built**: no Docker daemon in the environment |
-| GitHub Actions | Workflow written; its result on GitHub is reported in the pull request (not run locally) |
 | Public deployment | **Not deployed**: no hosting credentials. Exact steps are in `docs/deployment.md` |
 | NIST box-assembly ingestion | Blocked: download refused by the environment's network policy; contents not inspected, nothing assumed |
 | Carparts-Seg | Not integrated: licence ambiguous (AGPL-3.0 vs CC BY 4.0) |
