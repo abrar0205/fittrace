@@ -159,6 +159,7 @@ def get_investigation(db: Session, inv_id: int) -> dict:
 def list_investigations(db: Session, page: int, page_size: int) -> dict:
     offset, limit = paginate(page, page_size, get_settings().page_size_max)
     total = db.scalar(select(func.count()).select_from(m.QualityInvestigation)) or 0
-    invs = db.scalars(select(m.QualityInvestigation).order_by(m.QualityInvestigation.created_at.desc(), m.QualityInvestigation.id.desc())
+    newest_first = (m.QualityInvestigation.created_at.desc(), m.QualityInvestigation.id.desc())
+    invs = db.scalars(select(m.QualityInvestigation).order_by(*newest_first)
                       .offset(offset).limit(limit))
     return {"items": [_inv_list_item(db, i) for i in invs], "total": total, "page": page, "page_size": page_size}
