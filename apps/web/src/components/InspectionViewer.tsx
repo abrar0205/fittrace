@@ -44,14 +44,22 @@ export function useImagePixels(src: string) {
   return { pixels: state, error }
 }
 
+/** Luma (ITU-R BT.601, as OpenCV's BGR2GRAY) of one image row: what the algorithm sees. */
 export function rowIntensity(data: ImageData, y: number): number[] {
   const row = Math.max(0, Math.min(data.height - 1, Math.round(y)))
   const out = new Array<number>(data.width)
-  for (let x = 0; x < data.width; x++) out[x] = data.data[(row * data.width + x) * 4]
+  for (let x = 0; x < data.width; x++) out[x] = lumaAt(data, x, row)
   return out
 }
 
-export function InspectionViewer({ src, run, location, mmPerPx, layers, revealKey, hoverRow, onHoverRow }: {
+export function lumaAt(data: ImageData, x: number, y: number): number {
+  const i = (Math.floor(y) * data.width + Math.floor(x)) * 4
+  return Math.round(0.299 * data.data[i] + 0.587 * data.data[i + 1] + 0.114 * data.data[i + 2])
+}
+
+export type Hud = { serial: string; location: string; paint?: { name: string; swatch: string } | null; camera?: string }
+
+export function InspectionViewer({ src, run, location, mmPerPx, layers, revealKey, hoverRow, onHoverRow, hud }: {
   src: string
   run: InspectionRun | null
   location: Location
@@ -60,6 +68,7 @@ export function InspectionViewer({ src, run, location, mmPerPx, layers, revealKe
   revealKey: string
   hoverRow: number | null
   onHoverRow: (row: number | null) => void
+  hud?: Hud
 }) {
   const { pixels, error } = useImagePixels(src)
   const wrap = useRef<HTMLDivElement>(null)
@@ -210,7 +219,17 @@ export function InspectionViewer({ src, run, location, mmPerPx, layers, revealKe
     return { x1, y1, x2, y2, ex, ey, off }
   }, [ov, meas, H])
 
-  const pixelValue = hover && pixels ? pixels.data.data[(Math.floor(hover.iy) * W + Math.floor(hover.ix)) * 4] : null
+  const pixelValue = hover && pixels ? lumaAt(pixels.data, hover.ix, hover.iy) : null
+  const pixelRgb = hover && pixels
+    ? Array.from(pixels.data.data.slice((Math.floor(hover.iy) * W + Math.floor(hover.ix)) * 4, (Math.floor(hover.iy) * W + Math.floor(hover.ix)) * 4 + 3))
+    : null
+  // Scale bar: the largest "nice" length that stays under ~22% of the view width.
+  const scaleBar = useMemo(() => {
+    if (!mmPerPx) return null
+    const pxPerMm = s / mmPerPx
+    const mm = [0.1, 0.2, 0.5, 1, 2, 5].filter((v) => v * pxPerMm <= box.w * 0.22).pop() ?? 0.1
+    return { mm, px: mm * pxPerMm }
+  }, [mmPerPx, s, box.w])
   const nearRow = hover && ov?.rows?.length
     ? ov.rows.reduce((a, b) => (Math.abs(b.y - hover.iy) < Math.abs(a.y - hover.iy) ? b : a))
     : null
@@ -320,6 +339,20 @@ export function InspectionViewer({ src, run, location, mmPerPx, layers, revealKe
             aria-hidden
           />
         )}
+        {hud && (
+          <div className="hud" aria-hidden>
+            <span className="hud-chip strong">{hud.serial}</span>
+            <span className="hud-chip">{hud.location}</span>
+            {hud.paint && <span className="hud-chip"><i style={{ background: hud.paint.swatch }} />{hud.paint.name}</span>}
+            {hud.camera && <span className="hud-chip">{hud.camera}</span>}
+          </div>
+        )}
+        {scaleBar && (
+          <div className="scalebar" aria-hidden>
+            <span style={{ width: scaleBar.px }} />
+            <b>{scaleBar.mm} mm</b>
+          </div>
+        )}
         {view.k > 1 && (
           <button type="button" className="btn small zoom-reset" onClick={resetView}><IconReset />{view.k.toFixed(1)}×, reset</button>
         )}
@@ -330,7 +363,7 @@ export function InspectionViewer({ src, run, location, mmPerPx, layers, revealKe
             <span>x <b>{hover.ix.toFixed(1)}</b> px</span>
             <span>y <b>{hover.iy.toFixed(1)}</b> px</span>
             {mmPerPx && <span><b>{(hover.ix * mmPerPx).toFixed(3)}</b> mm from left edge of field</span>}
-            <span>grey value <b>{pixelValue}</b></span>
+            <span>luma <b>{pixelValue}</b>{pixelRgb && <span className="rgb"> (R {pixelRgb[0]} G {pixelRgb[1]} B {pixelRgb[2]})</span>}</span>
             {nearRow && Math.abs(nearRow.y - hover.iy) < 3 && (
               <span className="trace-ink">sampled row {nearRow.y}: width {fmt((nearRow.xr - nearRow.xl), 2)} px{nearRow.inlier ? '' : ', rejected as outlier'}</span>
             )}

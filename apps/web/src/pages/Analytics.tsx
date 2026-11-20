@@ -16,7 +16,7 @@ export function Analytics() {
   const locations = useLocations()
   const location = params.get('location') ?? 'FD-FF-M'
   const [baseline, setBaseline] = useState(100)
-  const [station, setStation] = useState<'S10' | 'S20' | 'S30'>((['S10', 'S20', 'S30'].includes(params.get('station') ?? '') ? params.get('station') : 'S20') as 'S10' | 'S20' | 'S30')
+  const [station, setStation] = useState<'S10' | 'S20' | 'S30' | 'S40'>((['S10', 'S20', 'S30', 'S40'].includes(params.get('station') ?? '') ? params.get('station') : 'S20') as 'S10' | 'S20' | 'S30' | 'S40')
   const spc = useSpc(location, baseline)
   const st = useStation(location, station)
   const nav = useNavigate()
@@ -123,7 +123,7 @@ export function Analytics() {
           </Panel>
           <Panel title="Comparison by station resource"
             aside={<Seg small label="Station" value={station} onChange={setStation}
-              options={[{ value: 'S10', label: 'S10 underbody' }, { value: 'S20', label: 'S20 side aperture' }, { value: 'S30', label: 'S30 door hang' }]} />}
+              options={[{ value: 'S10', label: 'S10 underbody' }, { value: 'S20', label: 'S20 side aperture' }, { value: 'S30', label: 'S30 door hang' }, { value: 'S40', label: 'S40 paint booth' }]} />}
             note={st.data?.note}>
             {st.data && stationChart ? (
               <div className="grid cols-main">

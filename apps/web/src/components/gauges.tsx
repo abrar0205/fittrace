@@ -137,7 +137,7 @@ export function RowProfile({ intensity, row, edges, sigma }: {
       {edges && [edges.xl, edges.xr].map((e, i) => {
         // Labels point away from the gap and are clamped inside the chart; when the
         // edges are close on a narrow chart the right label drops to a second line.
-        const LW = 165
+        const LW = 182
         const leftStart = Math.max(X(edges.xl) - 4 - LW, 0)
         const rightStart = Math.min(X(edges.xr) + 4, W - LW)
         const stacked = leftStart + LW > rightStart

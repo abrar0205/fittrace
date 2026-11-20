@@ -14,6 +14,7 @@ from dataclasses import replace
 
 import numpy as np
 
+from fittrace.simulation.appearance import PAINT_MIX, PAINTS
 from fittrace.simulation.geometry import GENERATOR_VERSION, SceneParams, render_panel_gap
 from fittrace.vision.gap import ALGORITHM_NAME, ALGORITHM_VERSION, GapParams, measure_gap
 from fittrace.vision.tolerance import ToleranceSpec
@@ -29,11 +30,14 @@ CONDITIONS: dict[str, dict] = {
     "edge_blur_px": {"label": "Optical blur sigma (px)", "values": [0.5, 1.0, 2.0, 3.0, 5.0]},
     "occlusion_fraction": {"label": "Occluded fraction of rows (partial visibility)", "values": [0, 0.2, 0.4, 0.6, 0.7, 0.8]},
     "calibration_error_pct": {"label": "Calibration scale error (%)", "values": [-2, -1, 0, 1, 2]},
+    "paint": {"label": "Paint", "values": list(PAINTS)},
+    "reflection": {"label": "Clear-coat reflection strength", "values": [0, 0.5, 1.0, 1.5, 2.0]},
     "mm_per_px": {"label": "Camera resolution (mm/px)", "values": [0.01, 0.02, 0.025, 0.04, 0.06]},
 }
 
 
 def nominal_scene(rng: np.random.Generator, seed: int) -> SceneParams:
+    """Nominal operating distribution: generator 2.0 colour images with the production paint mix."""
     return SceneParams(
         gap_mm=float(rng.uniform(3.0, 5.0)),
         angle_deg=float(rng.normal(0, 1.0)),
@@ -44,11 +48,20 @@ def nominal_scene(rng: np.random.Generator, seed: int) -> SceneParams:
         left_level=float(rng.uniform(0.72, 0.82)),
         right_level=float(rng.uniform(0.70, 0.80)),
         seed=seed,
+        paint=str(rng.choice(list(PAINT_MIX), p=list(PAINT_MIX.values()))),
+        gap_style=("flange", "pillar")[int(rng.integers(2))],
+        orange_peel=float(np.clip(rng.normal(0.03, 0.006), 0.01, 0.06)),
+        crease_y=float(rng.uniform(0.15, 0.3)),
+        reflection=float(rng.uniform(0.25, 1.0)),
+        reflection_angle_deg=float(rng.uniform(20, 160)),
+        reflection_pos=float(rng.uniform(-0.1, 1.1)),
+        reflection_width_px=float(rng.uniform(30, 75)),
+        dust=int(rng.poisson(1.2)),
     )
 
 
 def _sample(args: tuple[str, float, int]) -> dict:
-    cond, value, seed = args
+    cond, value, seed = args  # value is numeric except for the "paint" condition
     rng = np.random.default_rng(seed)
     p = nominal_scene(rng, seed)
     assumed_scale = p.mm_per_px
@@ -58,6 +71,8 @@ def _sample(args: tuple[str, float, int]) -> dict:
         assumed_scale = p.mm_per_px * (1 + value / 100.0)
     elif cond == "gap_mm":
         p = replace(p, gap_mm=float(value), center_offset_mm=float(rng.uniform(-0.3, 0.3)))
+    elif cond == "paint":
+        p = replace(p, paint=str(value))
     elif cond == "mm_per_px":
         p = replace(p, mm_per_px=float(value))
         assumed_scale = float(value)
@@ -108,12 +123,12 @@ def _metrics(rows: list[dict]) -> dict:
 
 
 def run_vision_benchmark(per_condition: int = 24, nominal_n: int = 200, seed: int = 1000, workers: int = 4) -> dict:
-    jobs: list[tuple[str, float, int]] = [("nominal", 0.0, seed + i) for i in range(nominal_n)]
+    jobs: list[tuple[str, float | str, int]] = [("nominal", 0.0, seed + i) for i in range(nominal_n)]
     s = seed + 10_000
     for cond, spec in CONDITIONS.items():
         for v in spec["values"]:
             for _ in range(per_condition):
-                jobs.append((cond, float(v), s))
+                jobs.append((cond, v if isinstance(v, str) else float(v), s))
                 s += 1
     t0 = time.perf_counter()
     if workers > 1:
@@ -126,7 +141,7 @@ def run_vision_benchmark(per_condition: int = 24, nominal_n: int = 200, seed: in
     for cond, spec in CONDITIONS.items():
         points = []
         for v in spec["values"]:
-            sub = [r for r in rows if r["condition"] == cond and r["value"] == float(v)]
+            sub = [r for r in rows if r["condition"] == cond and r["value"] == (v if isinstance(v, str) else float(v))]
             points.append({"value": v, **_metrics(sub)})
         out_conditions[cond] = {"label": spec["label"], "points": points}
     failures = [r for r in rows if not r["ok"]]

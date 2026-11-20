@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import { api, ApiError, type InspectionDetail, type InspectionRun, SNAPSHOT, SNAPSHOT_READONLY_MESSAGE } from '../api/client'
 import { useCreateInvestigation, useGroundTruth, useInspection, useInspectionList, useLocations, useRerun } from '../api/hooks'
@@ -7,8 +7,9 @@ import { MicroGauge, RowProfile, ToleranceGauge } from '../components/gauges'
 import { IconArrow, IconInvestigate, IconPlay, IconTrace } from '../components/icons'
 import { InspectionViewer, type Layers, rowIntensity, useImagePixels } from '../components/InspectionViewer'
 import { Sheet } from '../components/Shell'
+import { LocationHistory, UnitCard } from '../components/inspector'
 import { Empty, ErrorState, Loading, StatusTag } from '../components/ui'
-import { dt, fmt, signed } from '../lib/format'
+import { dt, fmt, PAINT_SWATCH, signed } from '../lib/format'
 
 const STATUS_FILTERS = [
   { value: '', label: 'All results' },
@@ -20,8 +21,10 @@ const STATUS_FILTERS = [
 function InspectionList({ selected, onSelect }: { selected?: number; onSelect: (id: number) => void }) {
   const locations = useLocations()
   const [location, setLocation] = useState('')
-  const [status, setStatus] = useState('')
+  const [search] = useSearchParams()
+  const [status, setStatus] = useState(search.get('status') ?? '')
   const [q, setQ] = useState('')
+  useEffect(() => { const st = search.get('status'); if (st !== null) setStatus(st) }, [search])
   const list = useInspectionList({ location: location || undefined, status: status || undefined, q: q || undefined })
   const items = useMemo(() => list.data?.pages.flatMap((p) => p.items) ?? [], [list.data])
   const total = list.data?.pages[0]?.total
@@ -77,8 +80,14 @@ function InspectionList({ selected, onSelect }: { selected?: number; onSelect: (
           return (
             <div key={it.image_id} id={`insp-${it.image_id}`} data-id={it.image_id} role="option" aria-selected={it.image_id === selected}
               className={`wb-item ${it.image_id === selected ? 'selected' : ''}`} onClick={() => onSelect(it.image_id)}>
+              <span className="wb-thumb" style={{ backgroundImage: `url(${api.imageUrl(`/api/v1/inspections/${it.image_id}/image`)})` }}>
+                {oot && <i className="wb-thumb-flag" />}
+              </span>
               <span className="wb-serial">{it.serial}</span>
-              <span className="wb-loc">{it.location}</span>
+              <span className="wb-loc">
+                {it.paint_code && <i className="wb-paint" style={{ background: PAINT_SWATCH[it.paint_code] }} title={it.paint_code} />}
+                {it.location}
+              </span>
               <span className={`wb-gap ${oot ? 'oot' : ''} ${it.run_status === 'failed' ? 'fail' : ''}`}>
                 {it.run_status === 'failed' ? 'failed' : fmt(it.gap_mm, 3)}
               </span>
@@ -152,7 +161,7 @@ function Inspector({ d }: { d: InspectionDetail }) {
   return (
     <>
       <div className="wb-mid">
-      <section className="panel wb-center" aria-label="Image and overlay">
+      <section className="wb-center stage" aria-label="Image and overlay">
         <div className="wb-toolbar">
           <div className="wb-layer-chips" role="group" aria-label="Overlay layers">
             {([['points', 'Edge points'], ['fits', 'Fitted edges'], ['dimension', 'Dimension'], ['roi', 'Region of interest'], ['loupe', 'Loupe']] as const).map(([k, label]) => (
@@ -166,16 +175,18 @@ function Inspector({ d }: { d: InspectionDetail }) {
           </div>
         </div>
         <InspectionViewer src={imgUrl} run={run} location={d.location} mmPerPx={mmPerPx} layers={layers}
-          revealKey={`${run?.id}-${replay}`} hoverRow={hoverRow} onHoverRow={setHoverRow} />
-        <div className="wb-profile">
+          revealKey={`${run?.id}-${replay}`} hoverRow={hoverRow} onHoverRow={setHoverRow}
+          hud={{ serial: d.serial, location: d.location.code, camera: d.calibration?.camera,
+                 paint: d.paint ? { name: d.paint.name, swatch: PAINT_SWATCH[d.paint.code] ?? '#999' } : null }} />
+      </section>
+      <section className="panel wb-profile" aria-label="Row profile">
           <div className="wb-profile-head">
-            <h3>Row intensity profile, y = {profileRow.toFixed(0)}</h3>
-            <span className="small muted">
-              Grey values read from the image. Gradient uses a 1-D Gaussian (σ = {Number(run?.algorithm_params.smoothing_sigma_px ?? 1.5).toFixed(1)} px) approximating the algorithm's smoothing.
+            <h3>Row profile, y = {profileRow.toFixed(0)}</h3>
+            <span className="small">
+              Luma read from the image pixels (what the algorithm sees). Gradient uses a 1-D Gaussian (σ = {Number(run?.algorithm_params.smoothing_sigma_px ?? 1.5).toFixed(1)} px) approximating the algorithm's smoothing.
             </span>
           </div>
           {pixels ? <RowProfile intensity={rowIntensity(pixels.data, profileRow)} row={profileRow} edges={nearest} sigma={Number(run?.algorithm_params.smoothing_sigma_px ?? 1.5)} /> : <Loading height={120} />}
-        </div>
       </section>
       <RerunPanel d={d} selected={run?.id ?? null} onSelect={setRunId} />
       </div>
@@ -217,6 +228,9 @@ function Inspector({ d }: { d: InspectionDetail }) {
           {createInv.error && <div className="callout warn small" role="alert">{(createInv.error as ApiError).message}</div>}
         </section>
 
+        <LocationHistory d={d} />
+        <UnitCard d={d} />
+
         <section className="panel" aria-label="Measurement details">
           <div className="panel-head"><h3>Measurement record</h3><span className="aside">run {run?.id} {run?.is_current ? '(current)' : `(${run?.trigger})`}</span></div>
           <div className="panel-body">
@@ -256,12 +270,14 @@ function RerunPanel({ d, selected, onSelect }: { d: InspectionDetail; selected: 
   const base = d.current_run?.algorithm_params ?? {}
   const [p, setP] = useState({
     smoothing_sigma_px: Number(base.smoothing_sigma_px ?? 1.5), row_step: Number(base.row_step ?? 4),
-    min_edge_gradient: Number(base.min_edge_gradient ?? 6), outlier_mad_k: Number(base.outlier_mad_k ?? 3.5),
+    min_edge_gradient: Number(base.min_edge_gradient ?? 2), edge_snr: Number(base.edge_snr ?? 6),
+    outlier_mad_k: Number(base.outlier_mad_k ?? 3.5),
   })
   const rerun = useRerun(d.image_id)
   const fields: [keyof typeof p, string, number, number, number][] = [
     ['smoothing_sigma_px', 'Smoothing σ (px)', 0, 6, 0.1], ['row_step', 'Row step (px)', 1, 32, 1],
-    ['min_edge_gradient', 'Min. edge gradient', 0.5, 60, 0.5], ['outlier_mad_k', 'Outlier limit (MAD × k)', 1.5, 10, 0.5],
+    ['min_edge_gradient', 'Edge threshold floor', 0.5, 60, 0.5], ['edge_snr', 'Edge threshold × noise', 2, 30, 0.5],
+    ['outlier_mad_k', 'Outlier limit (MAD × k)', 1.5, 10, 0.5],
   ]
   return (
     <section className="panel rerun" aria-label="Algorithm parameters and run history">

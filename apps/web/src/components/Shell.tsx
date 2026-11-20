@@ -1,8 +1,9 @@
-import { type ReactNode, useEffect, useRef, useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { type ReactNode, useEffect } from 'react'
+import { NavLink, Outlet } from 'react-router-dom'
 
-import { api, type InspectionListItem, type Page, SNAPSHOT } from '../api/client'
+import { SNAPSHOT } from '../api/client'
 import { useHealth, useSnapshotMeta } from '../api/hooks'
+import { CommandPalette } from './CommandPalette'
 import { IconChart, IconInspect, IconInvestigate, IconMethod, IconOverview, IconPipeline, IconTrace, Logo } from './icons'
 
 export const SHEETS = [
@@ -14,47 +15,6 @@ export const SHEETS = [
   { to: '/pipelines', label: 'Pipelines', icon: IconPipeline },
   { to: '/method', label: 'Method', icon: IconMethod },
 ]
-
-function UnitSearch() {
-  const nav = useNavigate()
-  const ref = useRef<HTMLInputElement>(null)
-  const [value, setValue] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement
-      if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName)) {
-        e.preventDefault()
-        ref.current?.focus()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
-  const go = async () => {
-    const q = value.trim().toUpperCase()
-    if (!q) return
-    const serial = /^\d+$/.test(q) ? `SIM-${q.padStart(5, '0')}` : q
-    try {
-      const r = await api.get<Page<InspectionListItem>>('/inspections', { q: serial, page_size: 1 })
-      if (!r.items.length) return setError(`No unit matches ${serial}`)
-      setError(null)
-      setValue('')
-      nav(`/trace/${r.items[0].unit_id}`)
-    } catch {
-      setError('Search is unavailable')
-    }
-  }
-  return (
-    <form className="rail-search" onSubmit={(e) => { e.preventDefault(); void go() }} role="search">
-      <label className="sr-only" htmlFor="unit-search">Find a unit by serial</label>
-      <input id="unit-search" ref={ref} value={value} onChange={(e) => { setValue(e.target.value); setError(null) }}
-        placeholder="Find unit, e.g. 351" autoComplete="off" aria-describedby={error ? 'unit-search-err' : undefined} />
-      <kbd aria-hidden>/</kbd>
-      {error && <div id="unit-search-err" role="alert" style={{ fontSize: 11, color: '#f0b3ad', marginTop: 4 }}>{error}</div>}
-    </form>
-  )
-}
 
 export function Shell() {
   const health = useHealth()
@@ -70,7 +30,11 @@ export function Shell() {
             <span className="brand-sub">Dimensional quality workbench</span>
           </span>
         </NavLink>
-        <UnitSearch />
+        <button type="button" className="rail-cmd" onClick={() => window.dispatchEvent(new Event('fittrace:palette'))}
+          aria-keyshortcuts="Control+K /" title="Find a unit, location, investigation or sheet">
+          <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="M11 11l3.5 3.5" stroke="currentColor" strokeWidth="1.5" /></svg>
+          <span className="rail-cmd-label">Search</span><kbd>Ctrl K</kbd>
+        </button>
         <nav>
           {SHEETS.map((s, i) => (
             <NavLink key={s.to} to={s.to} end={s.end} title={s.label} className={({ isActive }) => (isActive ? 'active' : undefined)}>
@@ -100,6 +64,7 @@ export function Shell() {
         </div>
       </aside>
       <Outlet />
+      <CommandPalette />
     </div>
   )
 }

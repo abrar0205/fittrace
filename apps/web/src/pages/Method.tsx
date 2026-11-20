@@ -14,7 +14,7 @@ function ConditionChart({ cond }: { cond: { label: string; points: any[] } }) {
     const ok = cond.points.filter((p) => p.n_ok > 0)
     const sd = ok.map((p) => Math.sqrt(Math.max(0, p.rmse_um ** 2 - p.bias_um ** 2)))
     return [
-      { type: 'scatter', mode: 'lines+markers', x: ok.map((p) => String(p.value)), y: ok.map((p) => p.bias_um),
+      { type: 'scatter', mode: typeof ok[0]?.value === 'string' ? 'markers' : 'lines+markers', x: ok.map((p) => String(p.value)), y: ok.map((p) => p.bias_um),
         error_y: { type: 'data', array: sd, color: INK3, thickness: 1, width: 3 }, line: { color: BLUE, width: 2 }, marker: { size: 7, color: BLUE },
         text: ok.map((p, i) => `bias ${p.bias_um.toFixed(1)} µm, sd ${sd[i].toFixed(1)} µm<br>${p.n_ok} of ${p.n} measured`),
         hovertemplate: '%{x}: %{text}<extra></extra>' },
@@ -60,7 +60,7 @@ export function Method() {
         <Panel title="Simulation">
           <p className="small" style={{ marginBottom: 8 }}>Gap = nominal + location sensitivity × fixture offset + torque coefficient × (actual torque − 24 N·m) + thermal coefficient × (T − 21 °C) + static fixture bias + noise.</p>
           <p className="small" style={{ marginBottom: 8 }}>The demo dataset injects a +0.42 mm lateral shift on fixture FX-202 from unit 265. Clamp pressure and weld current are documented distractors with zero effect.</p>
-          <p className="small muted">Images are rendered from the simulated gap with known scale (0.025 mm/px), hem shading, blur, illumination gradient and sensor noise. Ground truth is stored separately and never read by the algorithm.</p>
+          <p className="small muted">Colour images are rendered from the simulated gap with known scale (0.025 mm/px): one of seven paints, clear-coat reflection, orange peel, flake, hem shading, blur, illumination gradient and sensor noise. Ground truth is stored separately and never read by the algorithm.</p>
         </Panel>
         <Panel title="Investigation">
           <ol className="steps">

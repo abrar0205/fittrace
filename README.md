@@ -18,7 +18,7 @@ The demo is a static snapshot published by GitHub Actions. On every push to `mai
 
 Every number on the site is computed in that run. The viewer, loupe, scan replay, profiles, charts and navigation all work on the snapshot. Actions that need a server (re-running a measurement with new parameters, starting new verifications, retrying pipelines) are disabled there and work when you run the full stack.
 
-![Inspection workbench: calibrated gap image with the algorithm's edge points, fitted edges, dimension, loupe and row intensity profile](docs/images/workbench.png)
+![Inspection workbench: colour gap image of a painted door and fender with the algorithm's edge points, fitted edges and dimension, location history and unit route](docs/images/workbench.png)
 
 ## The problem
 
@@ -37,8 +37,8 @@ calibrated image ──► gap algorithm ──► measurement + tolerance ─�
 
 | Area | Implementation |
 |---|---|
-| Synthetic data | Calibrated panel-gap images (area-sampled edges, PSF blur, hem shading, illumination, noise, occlusion) and a body-in-white line simulator with an explicit gap model and injectable faults (fixture shift, tool calibration drift). Deterministic seeds. |
-| Measurement | OpenCV scan-line algorithm: sub-pixel edges (parabolic peak), robust line fits (MAD rejection), parallelism check, perpendicular gap, mm via calibration valid at capture time. Refuses to report a value when prerequisites fail. |
+| Synthetic data | Calibrated colour images of painted panel gaps: seven paints (solid and metallic), clear-coat reflections, orange peel, flake, dust, flange or pillar gap interiors, exact sub-pixel edge coverage, PSF blur, hem shading, illumination, sensor noise, occlusion. A line simulator (body-in-white framing, door hang, paint shop, end-of-line inspection) with an explicit gap model and injectable faults (fixture shift, tool calibration drift). Deterministic seeds. |
+| Measurement | OpenCV scan-line algorithm on luma: noise-adaptive edge threshold (so black paint measures), sub-pixel edges (parabolic peak), robust line fits (MAD rejection), parallelism check, perpendicular gap, mm via calibration valid at capture time. Refuses to report a value when prerequisites fail. |
 | ETL | MES-style CSV exports to PostgreSQL. Atomic per run, idempotent by file checksum and natural keys, incremental, with a reject-rate quality gate, audited rejected rows and data-quality checks. Failed runs can be retried. |
 | Database | 28 tables, Alembic migrations (reversible, tested), FK/unique/check constraints, query-driven indexes, ground truth in separate tables. Analytical SQL in `database/queries/*.sql`. |
 | Analytics | I-MR charts with Phase I baseline limits and applicability checks (n, lag-1 autocorrelation, normality); spec limits kept separate from control limits; station comparison. |
@@ -57,7 +57,7 @@ The UI follows the conventions of an engineering drawing rather than a dashboard
 | ![Analytics](docs/images/analytics.png) **Analytics**: I-MR chart (baseline-estimated limits, Western Electric R1/R2/R4), with spec and control limits drawn differently; station comparison. | ![Traceability](docs/images/traceability.png) **Traceability**: routing sheet of stations, equipment, parameters and timings, linked inspections, equipment events before the build. |
 | ![Pipelines](docs/images/pipelines.png) **Pipelines**: every recorded execution with record flow, failure reason, retry, rejected rows, data-quality checks. | ![Evaluation](docs/images/evaluation.png) **Method and evaluation**: benchmark sweeps showing where the algorithm holds and breaks, failure gallery re-rendered from stored parameters, recovery benchmark. |
 
-Interaction effects are driven by data, not decoration. The **scan-line reveal** replays the algorithm's row sampling order. The **loupe** magnifies the real pixels with the detected sub-pixel edges overlaid. The **row profile** plots the hovered row's grey values and gradient. The **caliper-style tolerance gauge** has go/no-go jaws at the specification limits. Clicking a control-chart point opens its inspection. Interactive re-runs with different parameters are stored for audit but never replace the pipeline result. Reduced-motion preferences are respected.
+Interaction effects are driven by data, not decoration. The **scan-line reveal** replays the algorithm's row sampling order. The **loupe** magnifies the real pixels with the detected sub-pixel edges overlaid. The **row profile** plots the hovered row's luma and gradient. Every image carries a heads-up strip (serial, location, paint, camera) and a millimetre scale bar, and the inspector shows that location's recent history and the unit's route. **Ctrl K** opens a command palette for units, locations, investigations and sheets. The **caliper-style tolerance gauge** has go/no-go jaws at the specification limits. Clicking a control-chart point opens its inspection. Interactive re-runs with different parameters are stored for audit but never replace the pipeline result. Reduced-motion preferences are respected.
 
 ## Architecture
 
@@ -94,19 +94,19 @@ More detail is in [docs/architecture.md](docs/architecture.md). The decisions an
 
 | Bias | RMSE | p95 abs. error | Failure rate | Tolerance calls correct | Latency p50 / p95 |
 |---:|---:|---:|---:|---:|---:|
-| +23.5 µm | 23.7 µm | 27.7 µm | 0.0% | 98.5% | 17.3 / 25.2 ms |
+| +23.7 µm | 23.9 µm | 28.4 µm | 0.0% | 98.5% | 24.1 / 32.0 ms |
 
-The bias is systematic and physically motivated. With simulated hem shading (0.06 mm edge roll-off), the intensity edge lies outside the true silhouette. On ideal step edges the error is below 1 µm, which would not be a credible number to quote. A ±1% calibration error moves the result by about 40 µm at a 4 mm gap. At 0.01 mm/px the gap no longer fits the field of view, so 54% of measurements fail, and with 70% or more of the rows occluded the algorithm declines to measure.
+The bias is systematic and physically motivated. With simulated hem shading (0.06 mm edge roll-off), the intensity edge lies outside the true silhouette. On ideal step edges the error is below 1 µm, which would not be a credible number to quote. A ±1% calibration error moves the result by about 40 µm at a 4 mm gap. The bias is nearly independent of paint (22.5 µm on red to 25.0 µm on blue metallic, no failures on any of the seven). At 0.01 mm/px the gap no longer fits the field of view, so 67% of measurements fail, and with 70% or more of the rows occluded the algorithm declines to measure.
 
 **Contributor recovery**, 60 simulated histories with random injected faults plus 20 fault-free histories:
 
 | Fault class | Top-1 at CUSUM alarm | Top-1 at alarm + 60 units | Top-1, full history |
 |---|---:|---:|---:|
-| S20 side-aperture fixture shift | 0% | 75% | 100% |
-| S30 nutrunner torque calibration drift | 15% | 65% | 100% |
-| S10 underbody fixture shift (weak coupling) | 25% | 55% | 100% |
+| S20 side-aperture fixture shift | 0% | 70% | 100% |
+| S30 nutrunner torque calibration drift | 30% | 70% | 100% |
+| S10 underbody fixture shift (weak coupling) | 20% | 60% | 100% |
 
-On fault-free histories, the CUSUM alarm (h = 6, limits from 60 units) fires in **55%** of runs, because a short baseline misestimates the process. The investigation attributes a significant contributor in **5%**. Full-history recovery is high because the simulated faults are recorded factors of meaningful size; [docs/limitations.md](docs/limitations.md) explains why that does not transfer to a real plant.
+On fault-free histories, the CUSUM alarm (h = 6, limits from 60 units) fires in **50%** of runs, because a short baseline misestimates the process. The investigation attributes a significant contributor in **5%**. Full-history recovery is high because the simulated faults are recorded factors of meaningful size; [docs/limitations.md](docs/limitations.md) explains why that does not transfer to a real plant.
 
 ## Run it
 
@@ -135,9 +135,9 @@ API docs are at `/docs` (OpenAPI). The TypeScript client types are generated fro
 ## Tests
 
 ```bash
-pytest                                   # 63 tests: unit + integration against real PostgreSQL (FITTRACE_TEST_DATABASE_URL)
+pytest                                   # 80 tests: unit + integration against real PostgreSQL (FITTRACE_TEST_DATABASE_URL)
 ruff check .
-cd apps/web && npm run lint && npm run typecheck && npm test   # 14 Vitest tests
+cd apps/web && npm run lint && npm run typecheck && npm test   # 15 Vitest tests
 CHROME_PATH=/usr/bin/google-chrome npx playwright test        # e2e against a running, seeded stack (E2E_SNAPSHOT=1 for the static build)
 ```
 
@@ -149,7 +149,7 @@ The integration tests cover reversible migrations, idempotent re-import (file-le
 
 ## Known limitations (short version)
 
-Flush is not measured, because it needs calibrated depth data. The images are synthetic and single-view. Investigation results are associations among recorded factors. The public datasets (Carparts-Seg, NIST, Bosch) are documented but not integrated, for the licence and access reasons given in [docs/datasets.md](docs/datasets.md). The full list is in [docs/limitations.md](docs/limitations.md).
+Flush is not measured, because it needs calibrated depth data. The images are synthetic and single-view: calibrated panel-gap images with reference values are not published by any manufacturer, so there is no real dataset to load (see [docs/datasets.md](docs/datasets.md)). Investigation results are associations among recorded factors. The public datasets (Carparts-Seg, NIST, Bosch) are documented but not integrated, for the licence and access reasons given in [docs/datasets.md](docs/datasets.md). The full list is in [docs/limitations.md](docs/limitations.md).
 
 ## License
 

@@ -7,7 +7,7 @@ from app.core.errors import not_found
 from app.domain import models as m
 from app.repositories.sql import rows
 from app.services.common import provenance
-from app.services.inspections import _list_item
+from app.services.inspections import _list_item, paint_out
 
 
 def unit_trace(db: Session, unit_id: int | None = None, serial: str | None = None, dataset_id: int | None = None,
@@ -34,6 +34,7 @@ def unit_trace(db: Session, unit_id: int | None = None, serial: str | None = Non
     events = rows(db, "equipment_history_before", dataset_id=unit.dataset_id, unit_id=unit.id, built_at=unit.built_at,
                   hours=event_window_h)
     assert ds and line
-    return {"unit_id": unit.id, "serial": unit.serial, "batch": unit.batch_code, "built_at": unit.built_at,
+    return {"unit_id": unit.id, "serial": unit.serial, "batch": unit.batch_code, "paint": paint_out(db, unit.paint_code),
+            "built_at": unit.built_at,
             "line": line.code, "dataset_key": ds.key, "route": route, "inspections": [_list_item(*r) for r in insp],
             "equipment_events": events, "provenance": provenance(ds)}

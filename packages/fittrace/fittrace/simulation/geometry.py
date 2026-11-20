@@ -28,7 +28,7 @@ from dataclasses import asdict, dataclass, field
 import cv2
 import numpy as np
 
-GENERATOR_VERSION = "panel-gap-generator/1.1.0"
+GENERATOR_VERSION = "panel-gap-generator/2.0.0"
 
 
 @dataclass(frozen=True)
@@ -65,6 +65,16 @@ class SceneParams:
     edge_rolloff_mm: float = 0.0
     seed: int = 0
     supersample: int = 4
+    # Generator 2.0 appearance (colour camera). ``paint=None`` keeps the greyscale model.
+    paint: str | None = None
+    gap_style: str = "flange"
+    orange_peel: float = 0.0
+    crease_y: float = -1.0
+    reflection: float = 0.0
+    reflection_angle_deg: float = 60.0
+    reflection_pos: float = 0.5
+    reflection_width_px: float = 40.0
+    dust: int = 0
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -93,7 +103,11 @@ def _edge_positions(p: SceneParams) -> tuple[float, float, float, float]:
 
 
 def render_panel_gap(p: SceneParams) -> tuple[np.ndarray, GroundTruth]:
-    """Render an 8-bit grayscale image and its ground truth."""
+    """Render an 8-bit image and its ground truth.
+
+    Greyscale (H x W) when ``p.paint`` is None, otherwise a colour image in BGR
+    channel order (H x W x 3), as OpenCV reads and writes it.
+    """
     if p.gap_mm < 0:
         raise ValueError("gap_mm must be non-negative")
     Calibration(p.mm_per_px).validate()
@@ -109,6 +123,9 @@ def render_panel_gap(p: SceneParams) -> tuple[np.ndarray, GroundTruth]:
     xs = (np.arange(p.width_px)[:, None] + offs[None, :]).reshape(-1)
     X, Y = np.meshgrid(xs, ys)
     U = (X - cx) * np.cos(theta) - (Y - cy) * np.sin(theta)
+
+    if p.paint is not None:
+        return _render_colour(p, U, left_u, right_u, s, rng)
 
     hi = np.where(U < left_u, p.left_level, np.where(U > right_u, p.right_level, p.gap_level))
     if p.edge_rolloff_mm > 0:
@@ -158,6 +175,47 @@ def render_panel_gap(p: SceneParams) -> tuple[np.ndarray, GroundTruth]:
         right_edge_x_at_center_px=cx + right_u / ct,
         params=p.to_dict(),
     )
+    return out, truth
+
+
+def _render_colour(p: SceneParams, U: np.ndarray, left_u: float, right_u: float, s: int,
+                   rng: np.random.Generator) -> tuple[np.ndarray, GroundTruth]:
+    """Colour path: identical geometry and hem roll-off, appearance from ``appearance``."""
+    from fittrace.simulation.appearance import PAINTS, render_color
+
+    if p.paint not in PAINTS:
+        raise ValueError(f"unknown paint {p.paint!r}")
+    if p.gap_style not in ("flange", "pillar"):
+        raise ValueError(f"unknown gap_style {p.gap_style!r}")
+    # Panel coverage weighted by the hem roll-off (same profile as the greyscale model).
+    wl = (U < left_u).astype(np.float64)
+    wr = (U > right_u).astype(np.float64)
+    if p.edge_rolloff_mm > 0:
+        r = p.edge_rolloff_mm / p.mm_per_px
+        for d, wgt in ((left_u - U, wl), (U - right_u, wr)):
+            zone = (d >= 0) & (d < r)
+            wgt[zone] = 0.35 + 0.65 * np.sqrt(np.clip(d[zone] / r, 0, 1))
+    h, w = p.height_px, p.width_px
+    cover_l = wl.reshape(h, s, w, s).mean(axis=(1, 3))
+    cover_r = wr.reshape(h, s, w, s).mean(axis=(1, 3))
+    Uc = U.reshape(h, s, w, s).mean(axis=(1, 3))
+    u_rel = (Uc - left_u) / max(1e-6, right_u - left_u)
+    rgb = render_color(p, cover_l, cover_r, u_rel, rng)
+
+    if p.occlusion_fraction > 0:
+        rows = int(round(p.occlusion_fraction * h))
+        if rows > 0:
+            clip = cv2.GaussianBlur(0.16 + 0.03 * rng.standard_normal((rows, w)), (0, 0), 2.0)
+            rgb[:rows, :, :] = np.clip(clip, 0, 1)[..., None] * np.array([1.0, 1.0, 1.08])
+
+    out = np.clip(np.rint(rgb * 255.0), 0, 255).astype(np.uint8)[:, :, ::-1].copy()  # RGB -> BGR
+    gap_px = p.gap_mm / p.mm_per_px
+    theta = np.deg2rad(p.angle_deg)
+    cx = (p.width_px - 1) / 2.0
+    ct = np.cos(theta)
+    truth = GroundTruth(gap_mm=p.gap_mm, gap_px=gap_px, angle_deg=p.angle_deg,
+                        left_edge_x_at_center_px=cx + left_u / ct, right_edge_x_at_center_px=cx + right_u / ct,
+                        params=p.to_dict())
     return out, truth
 
 

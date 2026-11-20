@@ -61,8 +61,19 @@ export const FACTOR_LABEL: Record<string, string> = {
   weld_current_ka: 'Weld current',
   ambient_temp_c: 'Ambient temperature',
   hinge_torque_nm: 'Hinge torque',
+  s40_booth: 'S40 paint booth',
+  paint: 'Paint',
+  film_build_um: 'Paint film build',
+  booth_temp_c: 'Booth temperature',
 }
 
 export const PARAM_UNIT: Record<string, string> = {
   clamp_pressure_bar: 'bar', weld_current_ka: 'kA', ambient_temp_c: '°C', hinge_torque_nm: 'N·m', cycle_time_s: 's',
+  film_build_um: 'µm', booth_temp_c: '°C',
+}
+
+/** Display swatches for the simulated paint codes (approximate sRGB of each paint). */
+export const PAINT_SWATCH: Record<string, string> = {
+  'P-WH1': '#e8e8e4', 'P-BK1': '#17181b', 'P-GY1': '#5b6168', 'P-BL3M': '#1f3f92',
+  'P-RD1': '#b5161d', 'P-SL2M': '#b8bcc1', 'P-GR2M': '#3b3e44',
 }

@@ -2040,6 +2040,16 @@
       "type": "integer",
       "title": "Unit Id"
      },
+     "paint": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/PaintOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
      "dataset_key": {
       "type": "string",
       "title": "Dataset Key"
@@ -2125,6 +2135,7 @@
      "image_id",
      "serial",
      "unit_id",
+     "paint",
      "dataset_key",
      "location",
      "captured_at",
@@ -2154,6 +2165,17 @@
      "unit_id": {
       "type": "integer",
       "title": "Unit Id"
+     },
+     "paint_code": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Paint Code"
      },
      "location": {
       "type": "string",
@@ -3083,6 +3105,29 @@
     ],
     "title": "Page[PipelineRunOut]"
    },
+   "PaintOut": {
+    "properties": {
+     "code": {
+      "type": "string",
+      "title": "Code"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "metallic": {
+      "type": "boolean",
+      "title": "Metallic"
+     }
+    },
+    "type": "object",
+    "required": [
+     "code",
+     "name",
+     "metallic"
+    ],
+    "title": "PaintOut"
+   },
    "PipelineErrorOut": {
     "properties": {
      "id": {
@@ -3501,6 +3546,13 @@
       "maximum": 60.0,
       "minimum": 0.5,
       "title": "Min Edge Gradient",
+      "default": 2.0
+     },
+     "edge_snr": {
+      "type": "number",
+      "maximum": 30.0,
+      "minimum": 2.0,
+      "title": "Edge Snr",
       "default": 6.0
      },
      "outlier_mad_k": {
@@ -3912,6 +3964,16 @@
       "type": "string",
       "title": "Batch"
      },
+     "paint": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/PaintOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
      "built_at": {
       "type": "string",
       "format": "date-time",
@@ -3956,6 +4018,7 @@
      "unit_id",
      "serial",
      "batch",
+     "paint",
      "built_at",
      "line",
      "dataset_key",

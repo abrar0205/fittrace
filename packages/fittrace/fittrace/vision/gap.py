@@ -33,7 +33,7 @@ import cv2
 import numpy as np
 
 ALGORITHM_NAME = "fittrace.gap.scanline-subpixel"
-ALGORITHM_VERSION = "1.0.0"
+ALGORITHM_VERSION = "1.1.0"  # 1.1: noise-adaptive edge threshold (dark paints)
 
 
 @dataclass(frozen=True)
@@ -42,7 +42,8 @@ class GapParams:
     row_step: int = 4
     roi_margin_px: int = 6
     min_dynamic_range: float = 40.0  # grey levels between p1 and p99
-    min_edge_gradient: float = 6.0  # grey levels / px after smoothing
+    min_edge_gradient: float = 2.0  # floor of the edge threshold, grey levels / px after smoothing
+    edge_snr: float = 6.0  # edge threshold = max(floor, edge_snr x robust gradient noise)
     min_gap_px: float = 3.0
     min_valid_row_fraction: float = 0.35
     max_parallel_deviation_deg: float = 1.5
@@ -134,14 +135,14 @@ def _parabolic_peak(g: np.ndarray, i: int) -> float:
     return float(i + max(-0.5, min(0.5, delta)))
 
 
-def _row_edges(profile: np.ndarray, grad: np.ndarray, p: GapParams) -> tuple[float, float, float] | None:
+def _row_edges(profile: np.ndarray, grad: np.ndarray, p: GapParams, thr: float) -> tuple[float, float, float] | None:
     """Return (x_left, x_right, pair_strength) for one row, or None."""
     n = len(grad)
     # Local extrema of the derivative exceeding the gradient threshold.
     interior = slice(1, n - 1)
     g_c = grad[interior]
-    is_min = (g_c < grad[:-2]) & (g_c <= grad[2:]) & (g_c < -p.min_edge_gradient)
-    is_max = (g_c > grad[:-2]) & (g_c >= grad[2:]) & (g_c > p.min_edge_gradient)
+    is_min = (g_c < grad[:-2]) & (g_c <= grad[2:]) & (g_c < -thr)
+    is_max = (g_c > grad[:-2]) & (g_c >= grad[2:]) & (g_c > thr)
     falls = np.nonzero(is_min)[0] + 1
     rises = np.nonzero(is_max)[0] + 1
     if len(falls) == 0 or len(rises) == 0:
@@ -236,11 +237,18 @@ def measure_gap(
         result.diagnostics["noise_estimate_grey"] = round(noise, 3)
 
         m = p.roi_margin_px
+        # Noise-adaptive edge threshold: robust (MAD) spread of the horizontal gradient, which
+        # is dominated by flat panel and gap areas. Dark paints have low contrast but also
+        # low gradient noise, so a fixed threshold either misses their edges or admits noise.
+        g_roi = grad[m : h - m, m : w - m]
+        sigma_g = float(1.4826 * np.median(np.abs(g_roi - np.median(g_roi))))
+        thr = max(p.min_edge_gradient, p.edge_snr * sigma_g)
+        result.diagnostics.update(gradient_noise=round(sigma_g, 4), edge_threshold=round(thr, 3))
         rows = np.arange(m, h - m, max(1, p.row_step))
         result.sampled_rows = int(len(rows))
         ys, xl, xr, strengths = [], [], [], []
         for y in rows:
-            e = _row_edges(sm[y, m : w - m], grad[y, m : w - m], p)
+            e = _row_edges(sm[y, m : w - m], grad[y, m : w - m], p, thr)
             if e is None:
                 continue
             ys.append(float(y))

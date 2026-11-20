@@ -115,3 +115,45 @@ def test_tolerance_evaluation_boundaries():
     assert spec.evaluate(None) == (ToleranceStatus.NOT_EVALUABLE, None)
     with pytest.raises(ValueError):
         ToleranceSpec(4.0, 0.2, 0.5)
+
+
+# ---- generator 2.0 (colour) and algorithm 1.1 ------------------------------------------
+
+from fittrace.simulation.appearance import PAINTS  # noqa: E402
+
+
+def colour(**kw):
+    base = {"gap_mm": 4.2, "seed": 11, "paint": "P-WH1", "gap_style": "flange", "orange_peel": 0.03, "crease_y": 0.25,
+            "reflection": 0.6, "reflection_angle_deg": 50, "reflection_pos": 0.4, "edge_rolloff_mm": 0.06, "dust": 2}
+    return render_panel_gap(SceneParams(**{**base, **kw}))
+
+
+def test_colour_render_is_bgr_and_deterministic():
+    a, gt = colour()
+    b, _ = colour()
+    assert a.shape == (240, 480, 3) and a.dtype == np.uint8 and np.array_equal(a, b)
+    assert gt.gap_px == pytest.approx(168.0)
+    red, _ = colour(paint="P-RD1")
+    assert red[:, :60, 2].mean() > 2 * red[:, :60, 0].mean()  # BGR order: red channel dominates
+
+
+@pytest.mark.parametrize("paint", list(PAINTS))
+@pytest.mark.parametrize("style", ["flange", "pillar"])
+def test_every_paint_and_gap_style_is_measured(paint, style):
+    img, gt = colour(paint=paint, gap_style=style, reflection=0.0)  # no reflection: hardest case for dark paints
+    r = measure_gap(img, 0.025)
+    assert r.ok, (paint, style, r.failure_code, r.diagnostics)
+    assert 0.010 < r.gap_mm - gt.gap_mm < 0.035  # documented hem-shading bias band
+
+
+def test_threshold_adapts_to_noise():
+    quiet, _ = colour(paint="P-BK1", reflection=0.0, noise_sigma=0.004)
+    noisy, _ = colour(paint="P-BK1", reflection=0.0, noise_sigma=0.05)
+    tq = measure_gap(quiet, 0.025).diagnostics["edge_threshold"]
+    tn = measure_gap(noisy, 0.025).diagnostics["edge_threshold"]
+    assert tn > tq
+
+
+def test_unknown_paint_rejected():
+    with pytest.raises(ValueError):
+        colour(paint="P-XX9")

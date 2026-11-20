@@ -5,7 +5,7 @@ import { api, type InspectionListItem, type Page } from '../api/client'
 import { useTrace } from '../api/hooks'
 import { Sheet } from '../components/Shell'
 import { Empty, ErrorState, Loading, Panel, StatusTag } from '../components/ui'
-import { dt, fmt, gapBetween, PARAM_UNIT, signed, time } from '../lib/format'
+import { dt, fmt, gapBetween, PARAM_UNIT, signed, time, PAINT_SWATCH } from '../lib/format'
 
 function SerialForm() {
   const nav = useNavigate()
@@ -39,7 +39,7 @@ export function Traceability() {
     <Sheet no={4} title="Traceability"
       lede="The simulated manufacturing history of one unit: each station, the fixture or tool it used, recorded process parameters, and the inspection results it produced."
       tools={<SerialForm />} tb={{ dataset: d?.dataset_key, extra: [['Unit', d?.serial ?? '—']] }}>
-      {!id && <div className="panel"><Empty title="Choose a unit to trace">Enter a serial above, press / anywhere to search, or open a unit from an inspection or investigation.</Empty></div>}
+      {!id && <div className="panel"><Empty title="Choose a unit to trace">Enter a serial above, press Ctrl K anywhere to search, or open a unit from an inspection or investigation.</Empty></div>}
       {id && t.isLoading && <Loading height={360} />}
       {t.error && <div className="panel"><ErrorState error={t.error} /></div>}
       {d && (
@@ -48,7 +48,9 @@ export function Traceability() {
             <div><span className="fig-k">Unit</span><span className="fig-v">{d.serial}</span></div>
             <div><span className="fig-k">Built (S10 start)</span><span className="fig-v" style={{ fontSize: 'var(--t-lg)' }}>{dt(d.built_at)}</span></div>
             <div><span className="fig-k">Line and material batch</span><span className="fig-v" style={{ fontSize: 'var(--t-lg)' }}>{d.line}, {d.batch}</span></div>
-            <div><span className="fig-k">History</span><span className="fig-v" style={{ fontSize: 'var(--t-lg)', color: 'var(--amber-ink)' }}>Simulated</span></div>
+            <div><span className="fig-k">Paint</span><span className="fig-v" style={{ fontSize: 'var(--t-lg)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              {d.paint ? <><i className="paint-chip" style={{ width: 18, height: 18, background: PAINT_SWATCH[d.paint.code] ?? '#999' }} />{d.paint.name}</> : 'Not recorded'}
+            </span></div>
           </div>
 
           <Panel title="Process route" aside="stations in sequence; time between steps on the connector">

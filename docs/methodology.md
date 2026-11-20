@@ -1,24 +1,29 @@
 # Methodology
 
-## Image generation (`fittrace.simulation.geometry`)
+## Image generation (`fittrace.simulation`, `panel-gap-generator/2.0.0`)
 
-A top-down view of two panels separated by a gap. With `u = (x − cx)·cos θ − (y − cy)·sin θ` as the signed distance along the gap normal, pixels with `|u − offset| < gap/2` lie in the gap. The scene is rendered at 4× supersampling and area-averaged, so the image has true sub-pixel edges. On top of that come, in order:
+A top-down view of two panels separated by a gap. With `u = (x − cx)·cos θ − (y − cy)·sin θ` as the signed distance along the gap normal, pixels with `|u − offset| < gap/2` lie in the gap. Edge coverage is computed exactly per pixel (area-sampled at 4× supersampling), so the image has true sub-pixel edges and the ground truth stays at the panel silhouette.
 
-- **Hem shading** (`edge_rolloff_mm`): panel brightness ramps from 35% to 100% over the roll-off width (square-root profile). The ground-truth edge stays at the silhouette.
-- **Optical blur:** a Gaussian PSF with `edge_blur_px`.
-- **Illumination:** a linear gradient across the field, plus an optional radial vignette.
-- **Occlusion:** a textured clip over the top `occlusion_fraction` of rows.
-- **Sensor noise:** additive Gaussian, with σ given as a fraction of full scale.
-- **Quantisation:** 8 bit.
+Version 2.0 renders the **painted body** as an end-of-line camera sees it: a colour (BGR) image of a painted panel pair.
 
-The ground truth (`gap_mm`, `gap_px`, edge positions) is returned separately.
+- **Paint:** one of seven invented paint codes, drawn per unit from a fixed production mix (white 28%, black 20%, grey 14%, blue metallic 12%, red 11%, silver metallic 9%, graphite metallic 6%). Codes and names are fictional.
+- **Exposure recipe:** dark paints get a longer exposure, but only the square root of the full correction, and never so long that the paint's strongest colour channel would exceed 0.88 of full scale. Black panels therefore stay dark and noisy, and saturated reds do not clip.
+- **Hem roll-off** (`edge_rolloff_mm`): panel brightness falls towards the edge, weighting the coverage of each edge pixel.
+- **Surface:** orange peel (low-frequency texture), metallic flake sparkle on metallic paints, a styling crease line at a fixed height per location, and occasional dust specks.
+- **Gap interior:** either a dark flange with a narrow lit band (`flange`, used at FD-FF-M) or a B-pillar trim with a weather seal (`pillar`, FD-RD-M).
+- **Clear-coat reflection:** a soft, neutral band from a booth light tube at a random angle, position and width, scaled by the paint's gloss. It lands on the panels, not in the gap.
+- **Optics and sensor:** Gaussian PSF, a linear illumination gradient and vignette, an optional occluding clip over the top rows, then read noise plus shot noise per channel and 8-bit quantisation.
 
-## Gap measurement (`fittrace.vision.gap`, `fittrace.gap.scanline-subpixel` 1.0.0)
+The ground truth (`gap_mm`, `gap_px`, edge positions) is returned separately. The previous greyscale renderer (1.x) is kept for the condition sweeps that need it and for backwards-compatible tests.
 
-1. **Input checks:** a 2-D image of at least 32 × 32 px, a p1–p99 dynamic range of at least 40 grey levels, and saturation at most 5% (otherwise a flag is set).
+## Gap measurement (`fittrace.vision.gap`, `fittrace.gap.scanline-subpixel` 1.1.0)
+
+1. **Input checks:** a 2-D greyscale or 3-channel colour image of at least 32 × 32 px. Colour is converted to luma (Rec. 601 weights). A p1–p99 dynamic range of at least 40 levels is required, and saturation above 5% sets a flag.
 2. **Calibration:** a positive finite `mm_per_px` (any other value fails with `invalid_calibration`). `None` gives a pixel-only result flagged `uncalibrated`. The service layer only passes a calibration valid at capture time.
-3. **Smoothing:** Gaussian with σ = 1.5 px, then a horizontal Sobel derivative (grey levels per px).
-4. **Edge pairs:** for every 4th row inside a 6 px margin, the local derivative minima and maxima beyond ±6 grey/px. The algorithm picks the strongest falling/rising pair at least 3 px apart whose interior is darker than both neighbouring panels.
+3. **Smoothing:** Gaussian with σ = 1.5 px, then a horizontal Sobel derivative (levels per px).
+4. **Edge pairs:** for every 4th row inside a 6 px margin, the local derivative minima and maxima beyond a **noise-adaptive threshold**: `max(2.0, 6 × 1.4826 × MAD(gradient in the ROI))`. The algorithm picks the strongest falling/rising pair at least 3 px apart whose interior is darker than both neighbouring panels.
+
+   Version 1.0 used a fixed 6 levels/px. On black paint the panel-to-gap contrast is only a few levels, so some rows found no edge and 3 of 320 demo images failed with `insufficient_valid_rows`. Version 1.1 scales the threshold with the measured gradient noise instead: it stays well above noise on noisy images and drops low enough for dark paint. The values used are stored in the run diagnostics (`gradient_noise`, `edge_threshold`), and both parameters can be changed in an interactive re-run.
 5. **Sub-pixel refinement:** a three-point parabola through the derivative peak, clamped to ±0.5 px.
 6. **Robust fits:** `x = a·y + b` per edge, least squares with iterative rejection of points beyond 3.5 × 1.4826 × MAD (up to 5 iterations). Rows that are inliers for both edges count as valid.
 7. **Gates:**
@@ -45,6 +50,7 @@ gap = nominal_l
     + 0.4 · s_l · offset[FX at S10](t)
     + k_l · (torque_actual − 24 N·m)
     + c_l · (T_ambient − 21 °C)
+    − 0.002 · (film_build_µm − 110)
     + bias[FX at S20]
     + ε,   ε ~ N(0, σ_l)
 ```
@@ -55,6 +61,8 @@ gap = nominal_l
 | k (mm per N·m) | −0.03 | +0.02 |
 | c (mm per °C) | 0.006 | 0.004 |
 | σ (mm) | 0.10 | 0.09 |
+
+Since generator 2.0 every unit also passes the **S40 paint shop** (booths PB-401/PB-402), which records film build (N(110, 6) µm) and booth temperature. Film build adds `−0.002 mm per µm` above the 110 µm nominal to the gap (paint on both flanges narrows it). The paint colour has no effect on the true gap; any colour dependence in the results comes from the measurement.
 
 Static fixture biases are +0.02, −0.015 and 0 mm. Clamp pressure, weld current and cycle times are **distractors with zero effect**. Resources are assigned at random rather than round-robin, so stations are not aliased with each other.
 

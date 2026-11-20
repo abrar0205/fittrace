@@ -39,9 +39,9 @@ def unit_frame(res, measured: dict[str, float]) -> pd.DataFrame:
     rows = []
     for u in res.units:
         r = {"serial": u.serial, "built_at": pd.Timestamp(u.built_at), "batch": u.batch,
-             "shift": shift_label(pd.Timestamp(u.built_at)), "deviation_mm": measured[u.serial] - nominal}
+             "shift": shift_label(pd.Timestamp(u.built_at)), "paint": u.paint, "deviation_mm": measured[u.serial] - nominal}
         for st in u.route:
-            key = {"S10": "s10_fixture", "S20": "s20_fixture", "S30": "s30_tool"}.get(st["station"])
+            key = {"S10": "s10_fixture", "S20": "s20_fixture", "S30": "s30_tool", "S40": "s40_booth"}.get(st["station"])
             if key:
                 r[key] = st["equipment"]
             for k, (v, _) in st["params"].items():

@@ -18,6 +18,8 @@ PARAM_RANGES: dict[str, tuple[float, float, str]] = {
     "ambient_temp_c": (-10.0, 50.0, "degC"),
     "hinge_torque_nm": (0.0, 60.0, "N.m"),
     "cycle_time_s": (0.0, 900.0, "s"),
+    "film_build_um": (40.0, 250.0, "um"),
+    "booth_temp_c": (5.0, 45.0, "degC"),
 }
 
 
@@ -64,6 +66,7 @@ class Context:
     serials: frozenset[str]
     locations: frozenset[str]
     calibrations: frozenset[str]
+    paints: frozenset[str] = frozenset()
 
 
 def _require(raw: dict, fields: Iterable[str]) -> list[tuple[str, str]]:
@@ -72,11 +75,14 @@ def _require(raw: dict, fields: Iterable[str]) -> list[tuple[str, str]]:
 
 def validate_units(raw: dict, ctx: Context) -> tuple[dict | None, list[tuple[str | None, str]]]:
     errs: list[tuple[str | None, str]] = list(_require(raw, ["serial", "line", "built_at", "batch"]))
+    paint = (raw.get("paint") or "").strip() or None  # optional column (older exports have none)
+    if paint is not None and ctx.paints and paint not in ctx.paints:
+        errs.append(("paint", f"unknown paint code {paint!r}"))
     rec = None
     if not errs:
         try:
             rec = {"serial": raw["serial"].strip(), "line": raw["line"].strip(), "built_at": parse_ts(raw["built_at"]),
-                   "batch": raw["batch"].strip()}
+                   "batch": raw["batch"].strip(), "paint": paint}
         except ValueError as e:
             errs.append(("built_at", str(e)))
     return rec, errs

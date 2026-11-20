@@ -31,7 +31,7 @@ from app.domain import models as m
 logger = logging.getLogger("fittrace.snapshot")
 V1 = "/api/v1"
 SPC_BASELINES = [60, 80, 100, 120, 150, 200]
-STATIONS = ["S10", "S20", "S30"]
+STATIONS = ["S10", "S20", "S30", "S40"]
 
 
 def _client() -> TestClient:
@@ -68,12 +68,15 @@ def prepare(n_units: int = 120) -> dict:
             continue
         invs.append(_ok(r, f"investigation for {it['serial']}"))
     created = 0
-    for i, inv in enumerate(invs):
+    wrong_shown = False
+    for inv in invs:
         done = {v["target_code"] for v in inv["verification_runs"]}
         top = next((h for h in inv["hypotheses"] if h["significant"] and h["factor_type"] == "equipment"), None)
         targets = [top["level"]] if top else []
-        if i == 0 and top:
-            # One deliberately wrong target shows that acting on an innocent resource changes nothing.
+        if top and not wrong_shown:
+            # One deliberately wrong target (on the first investigation that names a contributor)
+            # shows that acting on an innocent resource changes nothing.
+            wrong_shown = True
             wrong = next((h["level"] for h in inv["hypotheses"]
                           if h["factor_type"] == "equipment" and h["level"] != top["level"]
                           and str(h["level"]).startswith(str(top["level"])[:4])), None)
