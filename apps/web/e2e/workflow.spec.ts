@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 // Runs against a live stack seeded with `python -m app.cli seed-demo`.
 test('inspect, investigate, trace and check the pipeline monitor', async ({ page }) => {
-  await page.goto('/inspect')
+  await page.goto('inspect')
   await page.getByLabel('Result').selectOption('out_of_tolerance')
   const first = page.getByRole('listbox', { name: 'Inspections' }).getByRole('option').first()
   await expect(first).toBeVisible()
@@ -35,7 +35,7 @@ test('inspect, investigate, trace and check the pipeline monitor', async ({ page
 })
 
 test('analytics points open their inspection', async ({ page }) => {
-  await page.goto('/analytics?location=FD-FF-M')
+  await page.goto('analytics?location=FD-FF-M')
   await expect(page.getByText('First signal')).toBeVisible()
   await expect(page.getByRole('img', { name: /Individuals control chart/ })).toBeVisible()
 })

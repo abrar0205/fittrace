@@ -8,4 +8,4 @@ SELECT vr.id, ca.kind, ca.target_code, vr.status, vr.n_units,
   FROM verification_runs vr
   JOIN corrective_actions ca ON ca.id = vr.corrective_action_id
  WHERE ca.investigation_id = :investigation_id
- ORDER BY vr.created_at DESC;
+ ORDER BY vr.created_at DESC, vr.id DESC;

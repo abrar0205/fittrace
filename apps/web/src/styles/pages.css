@@ -152,3 +152,49 @@ details summary { cursor: pointer; color: var(--steel); }
 .rerun-params { border-right: 1px solid var(--line); }
 .rerun-history .table { margin-top: 8px; }
 @media (max-width: 1100px) { .rerun { grid-template-columns: 1fr; } .rerun-params { border-right: 0; } }
+
+/* ------------------------------------------------------------------ line map (overview hero) */
+
+.linemap { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 0.8fr); gap: 0; position: relative; }
+.lm-station { position: relative; padding: 0 14px 0 0; display: grid; grid-template-rows: auto 1fr; gap: 10px; }
+.lm-station header { font-size: var(--t-ui); color: var(--ink-2); padding: 0 0 8px; position: relative; white-space: nowrap; }
+.lm-station header b { color: var(--ink); font-size: var(--t-md); margin-right: 4px; }
+/* conveyor: a rule under each station header with an arrowhead into the next station */
+.lm-station header::after { content: ''; position: absolute; left: 0; right: -14px; bottom: 0; height: 2px; background: var(--ink); }
+.lm-station:not(:last-child) header::before {
+  content: ''; position: absolute; right: -15px; bottom: -4px; border: 5px solid transparent; border-left: 8px solid var(--ink); border-right: 0;
+}
+.lm-station:last-child header::after { right: 0; }
+.lm-station.inspection header::after { background: var(--trace); }
+.lm-tiles { display: grid; gap: 8px; align-content: start; }
+.lm-tile {
+  display: grid; gap: 4px; text-align: left; padding: 9px 10px 8px; border: 1px solid var(--line); border-radius: var(--r-2);
+  background: var(--panel); transition: border-color 0.15s, background 0.15s;
+}
+.lm-tile:hover { border-color: var(--steel); background: #fff; }
+.lm-eq { display: flex; align-items: center; gap: 7px; font-family: var(--font-cond); font-weight: 600; font-size: var(--t-md); }
+.lm-eq i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.lm-fig { display: flex; justify-content: space-between; gap: 8px; font-size: var(--t-sm); }
+.lm-fig > span:first-child { font-family: var(--font-cond); font-size: var(--t-ui); font-weight: 500; }
+.lm-fig small { color: var(--ink-3); font-family: var(--font); font-weight: 400; }
+.lm-fig .amber { color: var(--amber-ink); font-weight: 600; }
+.lm-strip .lm-spec { fill: var(--panel-2); stroke: var(--line-strong); stroke-dasharray: 2 2; }
+.lm-strip .lm-nom { stroke: var(--ink-3); stroke-dasharray: 1 2; }
+.lm-strip .lm-range { stroke-width: 3; stroke-linecap: round; opacity: 0.55; }
+.lm-strip .lm-med { stroke-width: 1.5; }
+.lm-strip .lm-mean { stroke: var(--panel); stroke-width: 1.5; }
+.lm-strip .lm-lbl { font-size: 9.5px; fill: var(--ink-3); font-family: var(--font-cond); }
+@media (max-width: 1100px) { .linemap { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 18px; } }
+@media (max-width: 560px) { .linemap { grid-template-columns: 1fr; } .lm-station { padding-right: 0; } .lm-station header::before { display: none; } .lm-station header::after { right: 0; } }
+
+/* ------------------------------------------------------------------ walkthrough */
+
+.walk { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line-strong); border-radius: var(--r-2); background: var(--panel); overflow: hidden; }
+.walk a { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; padding: 11px 14px; color: var(--ink); border-right: 1px solid var(--line); text-decoration: none; position: relative; }
+.walk a:last-child { border-right: 0; }
+.walk a:hover { background: var(--steel-soft); }
+.walk .no { grid-row: span 2; width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--ink); display: grid; place-items: center; font-family: var(--font-cond); font-weight: 600; font-size: var(--t-sm); }
+.walk b { font-family: var(--font-cond); font-weight: 600; font-size: var(--t-md); }
+.walk span.d { font-size: var(--t-sm); color: var(--ink-2); }
+@media (max-width: 1100px) { .walk { grid-template-columns: repeat(2, minmax(0, 1fr)); } .walk a:nth-child(2) { border-right: 0; } .walk a:nth-child(-n + 2) { border-bottom: 1px solid var(--line); } }
+@media (max-width: 560px) { .walk { grid-template-columns: 1fr; } .walk a { border-right: 0; border-bottom: 1px solid var(--line); } }

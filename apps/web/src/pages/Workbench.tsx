@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
-import { api, ApiError, type InspectionDetail, type InspectionRun } from '../api/client'
+import { api, ApiError, type InspectionDetail, type InspectionRun, SNAPSHOT, SNAPSHOT_READONLY_MESSAGE } from '../api/client'
 import { useCreateInvestigation, useGroundTruth, useInspection, useInspectionList, useLocations, useRerun } from '../api/hooks'
 import { MicroGauge, RowProfile, ToleranceGauge } from '../components/gauges'
 import { IconArrow, IconInvestigate, IconPlay, IconTrace } from '../components/icons'
@@ -207,7 +207,7 @@ function Inspector({ d }: { d: InspectionDetail }) {
             {d.investigation_ids.length > 0 ? (
               <Link className="btn primary" to={`/investigations/${d.investigation_ids[0]}`}><IconInvestigate />Open investigation {d.investigation_ids[0]}</Link>
             ) : (
-              <button type="button" className="btn primary" disabled={!oot || createInv.isPending || run?.id !== d.current_run?.id} onClick={startInvestigation}
+              <button type="button" className="btn primary" disabled={SNAPSHOT || !oot || createInv.isPending || run?.id !== d.current_run?.id} onClick={startInvestigation}
                 title={oot ? 'Analyse upstream process history for this deviation' : 'Investigations start from out-of-tolerance results'}>
                 <IconInvestigate />{createInv.isPending ? 'Analysing history' : 'Start investigation'}
               </button>
@@ -269,6 +269,7 @@ function RerunPanel({ d, selected, onSelect }: { d: InspectionDetail; selected: 
       <div className="panel-head"><h3>Re-run with different parameters</h3></div>
       <div className="panel-body">
         <form className="param-grid" onSubmit={(e) => { e.preventDefault(); rerun.mutate(p, { onSuccess: (r) => onSelect(r.id) }) }}>
+          <fieldset disabled={SNAPSHOT} style={{ display: 'contents' }}>
           {fields.map(([k, label, min, max, step]) => (
             <label key={k} className="field">
               {label}
@@ -279,9 +280,12 @@ function RerunPanel({ d, selected, onSelect }: { d: InspectionDetail; selected: 
           <button className="btn" type="submit" disabled={rerun.isPending} style={{ gridColumn: '1 / -1' }}>
             <IconPlay />{rerun.isPending ? 'Measuring' : 'Run measurement'}
           </button>
+          </fieldset>
         </form>
         {rerun.error && <div className="callout warn small" role="alert" style={{ marginTop: 8 }}>{(rerun.error as ApiError).message}</div>}
-        <p className="small muted" style={{ marginTop: 8 }}>Interactive runs are stored for audit but never replace the pipeline result used in analytics.</p>
+        <p className="small muted" style={{ marginTop: 8 }}>
+          {SNAPSHOT ? SNAPSHOT_READONLY_MESSAGE : 'Interactive runs are stored for audit but never replace the pipeline result used in analytics.'}
+        </p>
       </div>
       </div>
       <div className="rerun-history">

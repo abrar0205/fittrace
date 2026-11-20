@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
-import { useDefaultDatasetKey, useLocations, useSpc, useStation } from '../api/hooks'
+import { SNAPSHOT } from '../api/client'
+import { useDefaultDatasetKey, useLocations, useSnapshotMeta, useSpc, useStation } from '../api/hooks'
 import { Plot } from '../components/Plot'
 import { Sheet } from '../components/Shell'
 import { ErrorState, Loading, Panel, Seg } from '../components/ui'
@@ -15,11 +16,12 @@ export function Analytics() {
   const locations = useLocations()
   const location = params.get('location') ?? 'FD-FF-M'
   const [baseline, setBaseline] = useState(100)
-  const [station, setStation] = useState<'S10' | 'S20' | 'S30'>('S20')
+  const [station, setStation] = useState<'S10' | 'S20' | 'S30'>((['S10', 'S20', 'S30'].includes(params.get('station') ?? '') ? params.get('station') : 'S20') as 'S10' | 'S20' | 'S30')
   const spc = useSpc(location, baseline)
   const st = useStation(location, station)
   const nav = useNavigate()
   const datasetKey = useDefaultDatasetKey()
+  const meta = useSnapshotMeta()
   const s = spc.data
 
   const charts = useMemo(() => {
@@ -90,8 +92,14 @@ export function Analytics() {
           )}
           <label className="field" style={{ gridAutoFlow: 'column', alignItems: 'center', gap: 6 }}>
             Baseline units
-            <input className="input" type="number" min={20} max={400} step={10} value={baseline} style={{ width: 80 }}
-              onChange={(e) => setBaseline(Math.max(20, Math.min(400, Number(e.target.value) || 100)))} />
+            {SNAPSHOT ? (
+              <select className="select" value={baseline} onChange={(e) => setBaseline(Number(e.target.value))}>
+                {(meta.data?.spc_baselines ?? [100]).map((b) => <option key={b} value={b}>{b}</option>)}
+              </select>
+            ) : (
+              <input className="input" type="number" min={20} max={400} step={10} value={baseline} style={{ width: 80 }}
+                onChange={(e) => setBaseline(Math.max(20, Math.min(400, Number(e.target.value) || 100)))} />
+            )}
           </label>
         </>
       }

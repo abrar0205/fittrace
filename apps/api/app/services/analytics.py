@@ -108,7 +108,7 @@ def overview(db: Session, ds: m.Dataset | None) -> dict:
                      "sparkline": [round(float(v), 4) for v in vals[-120:]]})
     invs = []
     for inv in db.scalars(select(m.QualityInvestigation).where(m.QualityInvestigation.dataset_id == ds.id)
-                          .order_by(m.QualityInvestigation.created_at.desc()).limit(6)):
+                          .order_by(m.QualityInvestigation.created_at.desc(), m.QualityInvestigation.id.desc()).limit(6)):
         invs.append(_inv_list_item(db, inv))
     return {"dataset": dataset_out(db, ds), "locations": locs,
             "latest_oot": rows(db, "latest_out_of_tolerance", dataset_id=ds.id, limit=8), "trend": trend,

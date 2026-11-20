@@ -21,7 +21,7 @@ def run_vision_benchmark(per_condition: int = 24, nominal_n: int = 200) -> dict:
 
 def latest_vision_stats(db: Session) -> tuple[float, float]:
     b = db.scalar(select(m.BenchmarkResult).where(m.BenchmarkResult.kind == "vision")
-                  .order_by(m.BenchmarkResult.created_at.desc()).limit(1))
+                  .order_by(m.BenchmarkResult.created_at.desc(), m.BenchmarkResult.id.desc()).limit(1))
     if b is None:
         return 0.0235, 0.003
     o = b.summary["overall"]
@@ -50,7 +50,7 @@ def run_investigation_benchmark(n_runs: int = 40, n_null: int | None = None) -> 
 
 def latest(db: Session, kind: str) -> m.BenchmarkResult:
     b = db.scalar(select(m.BenchmarkResult).where(m.BenchmarkResult.kind == kind)
-                  .order_by(m.BenchmarkResult.created_at.desc()).limit(1))
+                  .order_by(m.BenchmarkResult.created_at.desc(), m.BenchmarkResult.id.desc()).limit(1))
     if b is None:
         raise not_found("benchmark result of kind", kind)
     return b

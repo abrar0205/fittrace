@@ -35,7 +35,7 @@ export function makeQueryClient() {
   return new QueryClient({ defaultOptions: { queries: { staleTime: 15_000, retry: 1, refetchOnWindowFocus: false } } })
 }
 
-const router = createBrowserRouter(routes)
+const router = createBrowserRouter(routes, { basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/' })
 const queryClient = makeQueryClient()
 
 export default function App() {

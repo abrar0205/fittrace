@@ -6,6 +6,8 @@
     python -m app.cli measure --key K
     python -m app.cli benchmark-vision [--per-condition N]
     python -m app.cli benchmark-investigation [--runs N] [--null N]
+    python -m app.cli prepare-snapshot     # investigations + verifications for every out-of-tolerance result
+    python -m app.cli export-snapshot --out DIR   # static files for GitHub Pages
 """
 
 from __future__ import annotations
@@ -108,6 +110,10 @@ def main() -> None:
     sd.add_argument("--bench-runs", type=int, default=60)
     bv = sub.add_parser("benchmark-vision")
     bv.add_argument("--per-condition", type=int, default=24)
+    ps = sub.add_parser("prepare-snapshot", help="run investigations and verifications for the static snapshot")
+    ps.add_argument("--units", type=int, default=120)
+    es = sub.add_parser("export-snapshot", help="write every API view as static files for GitHub Pages")
+    es.add_argument("--out", required=True)
     bi = sub.add_parser("benchmark-investigation")
     bi.add_argument("--runs", type=int, default=60)
     bi.add_argument("--null", type=int, default=20)
@@ -120,6 +126,14 @@ def main() -> None:
         print(run_measurement_pipeline(args.key))
     elif args.cmd == "seed-demo":
         seed_demo(not args.no_benchmarks, args.bench_per_condition, args.bench_runs)
+    elif args.cmd == "prepare-snapshot":
+        from app.snapshot import prepare
+
+        print(json.dumps(prepare(args.units)))
+    elif args.cmd == "export-snapshot":
+        from app.snapshot import export
+
+        print(json.dumps(export(args.out)))
     elif args.cmd == "benchmark-vision":
         from app.services.benchmarks import run_vision_benchmark
 

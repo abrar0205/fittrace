@@ -4,6 +4,8 @@ declare const process: { env: Record<string, string | undefined> }
 import { defineConfig } from 'vite'
 
 export default defineConfig({
+  // '/fittrace/' for the GitHub Pages build; '/' everywhere else.
+  base: process.env.VITE_BASE ?? '/',
   plugins: [react()],
   server: {
     port: 5173,

@@ -1,6 +1,26 @@
 # Deployment
 
-**Status: not deployed.** No hosting credentials were available, so no public URL exists yet. These are the exact steps.
+## Public demo: GitHub Pages (live)
+
+**URL:** https://abrar0205.github.io/fittrace/
+
+GitHub Pages serves static files only, so the public demo is a snapshot built by `.github/workflows/pages.yml` on every push to `main` (or by hand from the Actions tab):
+
+1. Start a PostgreSQL 16 service container and run `alembic upgrade head`.
+2. Run `python -m app.cli seed-demo`: generate the line, run the 4 import executions (including the corrupt delivery), measure all 1,120 images, and run both benchmarks.
+3. Run `python -m app.cli prepare-snapshot`: an investigation for every out-of-tolerance inspection, plus paired verification jobs (the top-ranked target, and one deliberately wrong target).
+4. Run `python -m app.cli export-snapshot`: every view the UI needs, requested through the real API via the FastAPI TestClient and written as JSON. Inspection images and benchmark cases are written as PNG. An integration test checks that the exported files equal the API responses.
+5. Build the UI with `VITE_SNAPSHOT=1 VITE_BASE=/fittrace/`. `404.html` provides deep-link routing.
+6. Serve the result the way Pages does (`scripts/pages_server.py`) and run the Playwright suite against it.
+7. Publish to the `gh-pages` branch (single orphan commit, so the branch does not accumulate history).
+
+The snapshot is about 103 MB (mostly the 1,120 lossless PNG images, which the loupe and profile read pixel by pixel). That is well inside the 1 GB Pages limit. The workflow takes about 10–15 minutes.
+
+In snapshot mode, the client (`apps/web/src/api/snapshot.ts`) routes each typed API call to its exported file and applies the same filtering and pagination as the API for the two long lists. Write actions return a read-only error and are disabled in the UI with an explanation.
+
+## Full interactive deployment (optional)
+
+To run everything live (re-runs, new investigations and verifications, retries), host the API as well. No hosting credentials were available, so this is not deployed; these are the exact steps.
 
 ## Recommended low-cost setup
 
