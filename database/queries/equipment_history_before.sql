@@ -6,4 +6,4 @@ SELECT eq.code AS equipment, ee.occurred_at, ee.kind, ee.description,
  WHERE ee.dataset_id = :dataset_id
    AND ee.equipment_id IN (SELECT pe.equipment_id FROM production_events pe WHERE pe.unit_id = :unit_id)
    AND ee.occurred_at BETWEEN :built_at - make_interval(hours => :hours) AND :built_at
- ORDER BY ee.occurred_at DESC;
+ ORDER BY ee.occurred_at DESC, ee.id DESC;

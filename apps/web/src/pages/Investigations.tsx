@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 
-import { api, ApiError, type Hypothesis, type Investigation } from '../api/client'
+import { api, ApiError, type Hypothesis, type Investigation, SNAPSHOT } from '../api/client'
 import { useCreateVerification, useInvestigation, useInvestigations, useVerification } from '../api/hooks'
 import { EffectBar, useWidth } from '../components/gauges'
 import { IconDownload, IconPlay } from '../components/icons'
@@ -72,6 +72,10 @@ function InvestigationBody({ inv }: { inv: Investigation }) {
   const notEst = inv.hypotheses.filter((h) => h.status !== 'tested')
   const [sel, setSel] = useState<Hypothesis | null>(tested[0] ?? null)
   const nav = useNavigate()
+  const { hash } = useLocation()
+  useEffect(() => {
+    if (hash === '#verification') setTimeout(() => document.getElementById('verification')?.scrollIntoView({ block: 'start' }), 300)
+  }, [hash])
   const cp = inv.change_point as any
   const snap = inv.evidence.series_snapshot as any
   const shift = inv.summary.observed_shift_mm as number | null
@@ -274,9 +278,11 @@ function VerificationPanel({ inv, suggested }: { inv: Investigation; suggested?:
   }, [r, inv.location.nominal_mm])
 
   return (
-    <Panel title="Corrective-action verification" aside={<span className="tag sim">simulated experiment</span>}
+    <Panel id="verification" title="Corrective-action verification" aside={<span className="tag sim">simulated experiment</span>}
       note="The plant simulator continues production after the last imported unit twice, with identical random draws: once unchanged and once with the action applied. Both runs are rendered and measured by the vision algorithm, so the comparison is paired. It shows how a verification would be judged; it is not evidence about a real line.">
+      {SNAPSHOT && <p className="small muted" style={{ marginBottom: 8 }}>Static snapshot: the runs below were computed by the job worker in CI. New runs need the full stack.</p>}
       <form className="verify-form" onSubmit={(e) => { e.preventDefault(); run() }}>
+        <fieldset disabled={SNAPSHOT} style={{ display: 'contents' }}>
         <label className="field">Action
           <select className="select" value={target} onChange={(e) => setTarget(e.target.value)}>
             {EQUIPMENT.map((c) => <option key={c} value={c}>{c.startsWith('FX') ? 'Re-align fixture' : 'Re-calibrate nutrunner'} {c}{c === suggested ? ' (top ranked)' : ''}</option>)}
@@ -286,6 +292,7 @@ function VerificationPanel({ inv, suggested }: { inv: Investigation; suggested?:
           <input className="input" type="number" min={30} max={200} step={10} value={n} onChange={(e) => setN(Number(e.target.value))} />
         </label>
         <button className="btn primary" type="submit" disabled={create.isPending || ['queued', 'running'].includes(v.data?.status ?? '')}><IconPlay />Run simulated verification</button>
+        </fieldset>
       </form>
       {create.error && <div className="callout warn small" role="alert">{(create.error as ApiError).message}</div>}
       {inv.verification_runs.length > 0 && (

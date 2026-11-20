@@ -1,8 +1,8 @@
 -- Gap distribution by the equipment used at one station (fixture / tool comparison).
 SELECT eq.code                                                    AS equipment,
        count(*)                                                   AS n,
-       avg(m.gap_mm)                                              AS mean_mm,
-       stddev_samp(m.gap_mm)                                      AS sd_mm,
+       avg(m.gap_mm::numeric)::float8                             AS mean_mm,   -- exact, plan-independent
+       stddev_samp(m.gap_mm::numeric)::float8                     AS sd_mm,
        percentile_cont(0.5)  WITHIN GROUP (ORDER BY m.gap_mm)     AS median_mm,
        percentile_cont(0.05) WITHIN GROUP (ORDER BY m.gap_mm)     AS p05_mm,
        percentile_cont(0.95) WITHIN GROUP (ORDER BY m.gap_mm)     AS p95_mm,

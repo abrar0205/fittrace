@@ -4,6 +4,20 @@
 
 It is an independent portfolio project. All production data is **simulated** and all inspection images are **procedurally generated with known calibration**. It has no affiliation with, and no data from, any manufacturer.
 
+**Live demo: https://abrar0205.github.io/fittrace/**
+
+The demo is a static snapshot published by GitHub Actions. On every push to `main`, the [pages workflow](.github/workflows/pages.yml) does the following on a fresh PostgreSQL:
+1. seeds and imports the simulated line;
+2. measures all 1,120 images;
+3. runs both benchmarks;
+4. investigates every out-of-tolerance inspection;
+5. runs the corrective-action simulations;
+6. exports the API's responses as files;
+7. tests the built site in a browser;
+8. publishes it.
+
+Every number on the site is computed in that run. The viewer, loupe, scan replay, profiles, charts and navigation all work on the snapshot. Actions that need a server (re-running a measurement with new parameters, starting new verifications, retrying pipelines) are disabled there and work when you run the full stack.
+
 ![Inspection workbench: calibrated gap image with the algorithm's edge points, fitted edges, dimension, loupe and row intensity profile](docs/images/workbench.png)
 
 ## The problem
@@ -39,7 +53,7 @@ The UI follows the conventions of an engineering drawing rather than a dashboard
 
 | | |
 |---|---|
-| ![Overview](docs/images/overview.png) **Overview**: distributions against the specification window, hourly trend, latest out-of-tolerance results, pipeline health, provenance. | ![Investigation](docs/images/investigation.png) **Investigation**: deviation history with the change point, ranked contributors with effect CIs, difference-in-differences evidence, events near the change, limitations, verification. |
+| ![Overview](docs/images/overview.png) **Overview**: a line map of every fixture and nutrunner against the specification window, a four-step walkthrough of one deviation, distributions, hourly trend, pipeline health, provenance. | ![Investigation](docs/images/investigation.png) **Investigation**: deviation history with the change point, ranked contributors with effect CIs, difference-in-differences evidence, events near the change, limitations, verification. |
 | ![Analytics](docs/images/analytics.png) **Analytics**: I-MR chart (baseline-estimated limits, Western Electric R1/R2/R4), with spec and control limits drawn differently; station comparison. | ![Traceability](docs/images/traceability.png) **Traceability**: routing sheet of stations, equipment, parameters and timings, linked inspections, equipment events before the build. |
 | ![Pipelines](docs/images/pipelines.png) **Pipelines**: every recorded execution with record flow, failure reason, retry, rejected rows, data-quality checks. | ![Evaluation](docs/images/evaluation.png) **Method and evaluation**: benchmark sweeps showing where the algorithm holds and breaks, failure gallery re-rendered from stored parameters, recovery benchmark. |
 
@@ -112,6 +126,8 @@ FITTRACE_RUN_WORKER_IN_PROCESS=true uvicorn app.main:app --port 8000
 cd apps/web && npm ci && npm run dev  # http://localhost:5173
 ```
 
+To reproduce the public snapshot locally: `python -m app.cli prepare-snapshot && python -m app.cli export-snapshot --out ../../site/fittrace/snapshot`, then build the web app with `VITE_SNAPSHOT=1 VITE_BASE=/fittrace/`.
+
 Or with Docker: `docker compose up --build`, then open http://localhost:8000. The API serves the built UI, a worker container processes jobs, and the API seeds on first start. The compose file is written but could not be run in the build environment (no Docker daemon); see [PROGRESS.md](PROGRESS.md).
 
 API docs are at `/docs` (OpenAPI). The TypeScript client types are generated from `docs/openapi.json` (`npm run gen:api`), and CI fails if either side drifts.
@@ -119,10 +135,10 @@ API docs are at `/docs` (OpenAPI). The TypeScript client types are generated fro
 ## Tests
 
 ```bash
-pytest                                   # 62 tests: unit + integration against real PostgreSQL (FITTRACE_TEST_DATABASE_URL)
+pytest                                   # 63 tests: unit + integration against real PostgreSQL (FITTRACE_TEST_DATABASE_URL)
 ruff check .
-cd apps/web && npm run lint && npm run typecheck && npm test   # 12 Vitest tests
-CHROME_PATH=/usr/bin/google-chrome npx playwright test        # e2e against a running, seeded stack
+cd apps/web && npm run lint && npm run typecheck && npm test   # 14 Vitest tests
+CHROME_PATH=/usr/bin/google-chrome npx playwright test        # e2e against a running, seeded stack (E2E_SNAPSHOT=1 for the static build)
 ```
 
 The integration tests cover reversible migrations, idempotent re-import (file-level and row-level), rollback on checksum failure and on the quality gate, auditable rejects matching the injected defects, measurement accuracy against ground truth, the API contracts (pagination, structured errors, unit associations, ground truth isolation), investigation storage and idempotency, and the full corrective-action job lifecycle.

@@ -1,0 +1,78 @@
+name: pages
+
+# Publishes the public demo to GitHub Pages as a static snapshot. Every value in it is
+# computed in this job: seed and import the simulated line, measure all images, run the
+# benchmarks, investigate every out-of-tolerance inspection, run the corrective-action
+# simulations, then export the API's responses as files.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: fittrace, POSTGRES_PASSWORD: fittrace, POSTGRES_DB: fittrace }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U fittrace" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      FITTRACE_DATABASE_URL: postgresql+psycopg://fittrace:fittrace@localhost:5432/fittrace
+      FITTRACE_LOG_JSON: "false"
+      FITTRACE_LOG_LEVEL: WARNING
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: apps/web/package-lock.json }
+      - run: pip install -e packages/fittrace -e apps/api
+
+      - name: Migrate, seed, import, measure, benchmark
+        working-directory: apps/api
+        run: alembic upgrade head && python -m app.cli seed-demo
+      - name: Investigate every out-of-tolerance inspection and simulate corrective actions
+        working-directory: apps/api
+        run: python -m app.cli prepare-snapshot
+      - name: Export API responses as static files
+        working-directory: apps/api
+        run: python -m app.cli export-snapshot --out "$GITHUB_WORKSPACE/site/fittrace/snapshot"
+
+      - name: Build the web app in snapshot mode
+        working-directory: apps/web
+        env: { VITE_SNAPSHOT: "1", VITE_BASE: /fittrace/ }
+        run: |
+          npm ci
+          npx vite build --outDir "$GITHUB_WORKSPACE/site/fittrace" --emptyOutDir false
+          cp "$GITHUB_WORKSPACE/site/fittrace/index.html" "$GITHUB_WORKSPACE/site/fittrace/404.html"
+          touch "$GITHUB_WORKSPACE/site/fittrace/.nojekyll"
+
+      - name: End-to-end test of the built site (served like GitHub Pages)
+        working-directory: apps/web
+        env: { E2E_SNAPSHOT: "1", E2E_BASE_URL: "http://localhost:9000/fittrace/" }
+        run: |
+          npx playwright install --with-deps chromium
+          nohup python ../../scripts/pages_server.py "$GITHUB_WORKSPACE/site" 9000 > /dev/null 2>&1 &
+          sleep 2
+          npx playwright test
+
+      - name: Publish to the gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: site/fittrace
+          force_orphan: true
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
+          commit_message: "deploy: snapshot of ${{ github.sha }}"

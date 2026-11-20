@@ -19,8 +19,10 @@ Last updated: 20 Nov 2026. Everything below was executed in the development envi
 | Corrective-action job | Integration test of the full queue lifecycle; live run: FX-202 −0.147 mm (CI −0.183 to −0.111), OOT 9.2% to 0%; FX-201 no effect |
 | Responsive layout | Checked at 1920, 1440, 1280, 1024 and 390 px. The rail collapses to icons at 1100 px or below and becomes a sticky top bar at 760 px or below; the workbench places the result above the image below 1280 px. A script confirms that none of the 7 sheets scrolls horizontally at 390 px |
 | Frontend: 7 sheets | Inspected in Chrome at 1440 and 1920 px; scan reveal, loupe, row profile, chart click-through and verification polling exercised; layout defects found in review were fixed (viewer overflow, scaled SVG text, label collisions, table overflow) |
-| Frontend checks | ESLint and `tsc` clean; 12 Vitest tests; 2 Playwright e2e tests pass against both the dev server and the production build served by the API |
+| Frontend checks | ESLint and `tsc` clean; 14 Vitest tests; 2 Playwright e2e tests (plus 1 snapshot-only) pass against both the dev server and the production build served by the API |
 | Lint | `ruff check .` clean |
+| GitHub Pages snapshot | `prepare-snapshot` produced 25 investigations and 24 verification runs locally, and `export-snapshot` wrote 4,068 files (103 MB). The built site, served like Pages under `/fittrace/` with a 404 fallback, passes 3 Playwright tests (deep links, provenance, read-only actions, line map). An integration test asserts that the exported files equal the API responses |
+| Determinism fix | `test_snapshot` intermittently found the overview's hourly aggregates differing between two identical requests (about 1 in 4 full-suite runs). The root cause is not proven; the most likely one is float summation order changing with the query plan on a freshly loaded test database. The trend and station aggregates are now computed in exact `numeric`, and every ordered query has a unique tie-breaker. 30 consecutive full-suite runs have passed since |
 | GitHub Actions | Passed on PR #1: `python` (ruff, 62 tests on a PostgreSQL 16 service, OpenAPI drift check), `web` (type drift, lint, tsc, Vitest, build), `e2e` (fresh migrate + seed, Playwright against the API-served build) |
 
 ## Not done or not verified
@@ -28,7 +30,7 @@ Last updated: 20 Nov 2026. Everything below was executed in the development envi
 | Item | Status |
 |---|---|
 | Docker image and `docker compose` | Written, **not built**: no Docker daemon in the environment |
-| Public deployment | **Not deployed**: no hosting credentials. Exact steps are in `docs/deployment.md` |
+| Interactive (API) deployment | Not deployed: needs a host for the API and database. The public demo is the static GitHub Pages snapshot; see `docs/deployment.md` |
 | NIST box-assembly ingestion | Blocked: download refused by the environment's network policy; contents not inspected, nothing assumed |
 | Carparts-Seg | Not integrated: licence ambiguous (AGPL-3.0 vs CC BY 4.0) |
 | Bosch benchmark | Not attempted: needs a Kaggle sign-in |

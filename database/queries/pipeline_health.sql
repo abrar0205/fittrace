@@ -5,9 +5,9 @@ SELECT pipeline,
        sum(records_in)                                  AS records_in,
        sum(records_rejected)                            AS records_rejected,
        sum(records_loaded)                              AS records_loaded,
-       (array_agg(status ORDER BY started_at DESC))[1]  AS last_status,
+       (array_agg(status ORDER BY started_at DESC, id DESC))[1] AS last_status,
        max(started_at)                                  AS last_started_at,
-       avg(extract(epoch FROM (finished_at - started_at))) AS avg_duration_s
+       avg(extract(epoch FROM (finished_at - started_at)))::float8 AS avg_duration_s
   FROM pipeline_runs
  GROUP BY pipeline
  ORDER BY pipeline;

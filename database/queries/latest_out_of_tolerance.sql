@@ -8,5 +8,5 @@ SELECT ii.id AS image_id, pu.serial, ml.code AS location, ii.captured_at,
   JOIN measurement_locations ml ON ml.id = ii.location_id
  WHERE ii.dataset_id = :dataset_id
    AND m.status IN ('out_low', 'out_high')
- ORDER BY ii.captured_at DESC
+ ORDER BY ii.captured_at DESC, ii.id DESC  -- tie-break: a unit's images share a capture time
  LIMIT :limit;

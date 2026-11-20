@@ -1,8 +1,8 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 
-import { api, type InspectionListItem, type Page } from '../api/client'
-import { useHealth } from '../api/hooks'
+import { api, type InspectionListItem, type Page, SNAPSHOT } from '../api/client'
+import { useHealth, useSnapshotMeta } from '../api/hooks'
 import { IconChart, IconInspect, IconInvestigate, IconMethod, IconOverview, IconPipeline, IconTrace, Logo } from './icons'
 
 export const SHEETS = [
@@ -58,6 +58,7 @@ function UnitSearch() {
 
 export function Shell() {
   const health = useHealth()
+  const meta = useSnapshotMeta()
   const ok = health.data?.database === 'ok'
   return (
     <div className="shell">
@@ -84,10 +85,17 @@ export function Shell() {
             <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden><path d="M5 0l5 10H0z" fill="#d9a441" /></svg>
             Simulated data
           </span>
-          <span className="health" aria-live="polite">
-            <span className={`dot ${health.isLoading ? '' : ok ? 'ok' : 'bad'}`} />
-            {health.isLoading ? 'Connecting to API' : ok ? `API ${health.data?.version} connected` : 'API unavailable'}
-          </span>
+          {SNAPSHOT ? (
+            <span className="health" title="Computed by GitHub Actions; read-only">
+              <span className="dot ok" />
+              {meta.data ? `Snapshot ${meta.data.generated_at.slice(0, 10)}` : 'Static snapshot'}
+            </span>
+          ) : (
+            <span className="health" aria-live="polite">
+              <span className={`dot ${health.isLoading ? '' : ok ? 'ok' : 'bad'}`} />
+              {health.isLoading ? 'Connecting to API' : ok ? `API ${health.data?.version} connected` : 'API unavailable'}
+            </span>
+          )}
           <a href="https://github.com/abrar0205/fittrace" style={{ color: 'inherit' }}>Source on GitHub</a>
         </div>
       </aside>

@@ -68,9 +68,39 @@ async function request<T>(method: 'GET' | 'POST', path: string, params?: Params,
   return (await res.json()) as T
 }
 
-export const api = {
+/** Static-snapshot build (GitHub Pages): data comes from files exported by `python -m app.cli export-snapshot`. */
+export const SNAPSHOT = import.meta.env.VITE_SNAPSHOT === '1'
+export const SNAPSHOT_READONLY_MESSAGE =
+  'This public demo is a static snapshot computed in CI, so it cannot run new computations. Run the full stack (see the README) to do this.'
+
+const live = {
   get: <T>(path: string, params?: Params) => request<T>('GET', path, params),
   post: <T>(path: string, body: unknown) => request<T>('POST', path, undefined, body),
   imageUrl: (path: string) => `${API_BASE}${path}`,
   href: (path: string) => url(path),
+}
+
+export const api = SNAPSHOT
+  ? {
+      get: async <T>(path: string, params?: Params) => (await import('./snapshot')).snapshotGet(path, params) as Promise<T>,
+      post: async <T>(): Promise<T> => {
+        throw new ApiError(405, 'snapshot_readonly', SNAPSHOT_READONLY_MESSAGE)
+      },
+      imageUrl: (path: string) => snapshotAsset(path),
+      href: (path: string) => snapshotAsset(`/api/v1${path}`),
+    }
+  : live
+
+export type { Params }
+
+/** Maps an API asset path to its exported file in the snapshot. */
+export function snapshotAsset(path: string): string {
+  const base = `${import.meta.env.BASE_URL}snapshot/`
+  const rules: [RegExp, string][] = [
+    [/^\/api\/v1\/inspections\/(\d+)\/image$/, 'images/$1.png'],
+    [/^\/api\/v1\/evaluation\/vision\/cases\/(\d+)\/image$/, 'evaluation/cases/$1.png'],
+    [/^\/api\/v1\/reports\/investigations\/(\d+)\.(md|json)$/, 'reports/$1.$2'],
+  ]
+  for (const [re, to] of rules) if (re.test(path)) return base + path.replace(re, to)
+  return base + path.replace(/^\/api\/v1\//, '')
 }

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { ApiError } from '../api/client'
+import { ApiError, SNAPSHOT } from '../api/client'
 import { STATUS_LABEL } from '../lib/format'
 import { IconCheck, IconWarn, IconX } from './icons'
 
@@ -44,8 +44,8 @@ export function Loading({ label = 'Loading', height = 160 }: { label?: string; h
 
 export function ErrorState({ error, action }: { error: unknown; action?: ReactNode }) {
   const e = error instanceof ApiError ? error : null
-  const hint =
-    e?.code === 'network_error' ? <>Start it with <code>uvicorn app.main:app</code> in <code>apps/api</code>.</>
+  const hint = SNAPSHOT ? null
+    : e?.code === 'network_error' ? <>Start it with <code>uvicorn app.main:app</code> in <code>apps/api</code>.</>
       : e?.code === 'no_data' ? <>Seed the demo with <code>python -m app.cli seed-demo</code>.</>
         : null
   return (

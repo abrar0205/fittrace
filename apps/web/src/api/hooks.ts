@@ -154,3 +154,12 @@ export const useDefaultDatasetKey = () => {
   const q = useDatasets()
   return q.data?.find((d) => d.kind === 'synthetic')?.key ?? q.data?.[0]?.key
 }
+
+/** Snapshot provenance (static GitHub Pages build only). */
+export const useSnapshotMeta = () =>
+  useQuery({
+    queryKey: ['snapshot-meta'],
+    queryFn: async () => (await import('./snapshot')).loadMeta(),
+    enabled: import.meta.env.VITE_SNAPSHOT === '1',
+    staleTime: Infinity,
+  })
