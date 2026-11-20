@@ -1,0 +1,75 @@
+/*
+ * FitTrace tokens.
+ *
+ * Vernacular: ISO engineering drawings and metrology reports. The page is a
+ * drawing sheet (cool drafting-film surface, ink linework, a title block that
+ * carries provenance). Colour has one job each:
+ *   steel    interaction (links, selection, buttons)
+ *   trace    anything computed by the measurement algorithm (edges, fits, dimensions)
+ *   amber    out of tolerance (state) - never decoration
+ *   fault    errors and failed processing - never decoration
+ *   series-* categorical identity in charts (validated: all-pairs CVD dE >= 8)
+ */
+:root {
+  color-scheme: light;
+
+  --rail: #1d2329;
+  --rail-2: #262d34;
+  --rail-ink: #c9d3d9;
+  --rail-ink-dim: #8c99a3;
+
+  --sheet: #edf1f3;
+  --panel: #fafbfb;
+  --panel-2: #f3f6f7;
+  --line: #d3dbe0;
+  --line-strong: #aeb9c1;
+  --grid: #e3e8eb;
+
+  --ink: #17212a;
+  --ink-2: #44515c;
+  --ink-3: #5f6c77;
+
+  --steel: #2d5e8c;
+  --steel-hover: #244d74;
+  --steel-soft: #e2ebf3;
+
+  --trace: #0f8c95;
+  --trace-bright: #2fd0d9;
+  --trace-soft: #dcf0f1;
+
+  --amber: #a86a00;
+  --amber-ink: #7a4d00;
+  --amber-soft: #f8edd6;
+  --amber-line: #e6cc95;
+
+  --fault: #b42318;
+  --fault-soft: #fbe8e6;
+
+  --ok: #2f6b4f;
+  --ok-soft: #e3efe8;
+
+  --series-1: #3b6fd0;
+  --series-2: #b04e9a;
+  --series-3: #3e9450;
+  --series-muted: #a7b2ba;
+
+  --font: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-cond: 'IBM Plex Sans Condensed', 'IBM Plex Sans', ui-sans-serif, sans-serif;
+
+  /* type scale (px): 11 12 13 14 16 18 21 26 34 44 */
+  --t-xs: 11px;
+  --t-sm: 12px;
+  --t-ui: 13px;
+  --t-body: 14px;
+  --t-md: 16px;
+  --t-lg: 18px;
+  --t-xl: 21px;
+  --t-2xl: 26px;
+  --t-3xl: 34px;
+  --t-4xl: 44px;
+
+  --r-1: 3px;
+  --r-2: 5px;
+  --rail-w: 196px;
+  --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+}

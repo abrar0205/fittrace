@@ -1,0 +1,7 @@
+**/node_modules
+**/__pycache__
+apps/web/dist
+data/raw
+.git
+.github
+tests

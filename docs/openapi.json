@@ -1,0 +1,4143 @@
+{
+ "openapi": "3.1.0",
+ "info": {
+  "title": "FitTrace API",
+  "description": "Dimensional inspection, manufacturing traceability and quality investigation. All production data served by the demo is **simulated**; inspection images are procedurally generated with known calibration.",
+  "version": "1.0.0"
+ },
+ "paths": {
+  "/api/v1/health": {
+   "get": {
+    "tags": [
+     "meta"
+    ],
+    "summary": "Health",
+    "operationId": "health_api_v1_health_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Health"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/datasets": {
+   "get": {
+    "tags": [
+     "datasets"
+    ],
+    "summary": "List Datasets",
+    "operationId": "list_datasets_api_v1_datasets_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/DatasetOut"
+         },
+         "type": "array",
+         "title": "Response List Datasets Api V1 Datasets Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/locations": {
+   "get": {
+    "tags": [
+     "datasets"
+    ],
+    "summary": "List Locations",
+    "operationId": "list_locations_api_v1_locations_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/LocationOut"
+         },
+         "type": "array",
+         "title": "Response List Locations Api V1 Locations Get"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/overview": {
+   "get": {
+    "tags": [
+     "analytics"
+    ],
+    "summary": "Overview",
+    "operationId": "overview_api_v1_overview_get",
+    "parameters": [
+     {
+      "name": "dataset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 80
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "dataset key; defaults to the first synthetic dataset",
+       "title": "Dataset"
+      },
+      "description": "dataset key; defaults to the first synthetic dataset"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OverviewOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/inspections": {
+   "get": {
+    "tags": [
+     "inspections"
+    ],
+    "summary": "List Inspections",
+    "operationId": "list_inspections_api_v1_inspections_get",
+    "parameters": [
+     {
+      "name": "dataset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 80
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "dataset key; defaults to the first synthetic dataset",
+       "title": "Dataset"
+      },
+      "description": "dataset key; defaults to the first synthetic dataset"
+     },
+     {
+      "name": "location",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 40
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Location"
+      }
+     },
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "enum": [
+          "in_tolerance",
+          "out_low",
+          "out_high",
+          "out_of_tolerance",
+          "failed"
+         ],
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "name": "q",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 40
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Q"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 100000,
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 500,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     },
+     {
+      "name": "order",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "enum": [
+        "asc",
+        "desc"
+       ],
+       "type": "string",
+       "default": "desc",
+       "title": "Order"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_InspectionListItem_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/inspections/{image_id}": {
+   "get": {
+    "tags": [
+     "inspections"
+    ],
+    "summary": "Get Inspection",
+    "operationId": "get_inspection_api_v1_inspections__image_id__get",
+    "parameters": [
+     {
+      "name": "image_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Image Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/InspectionDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/inspections/{image_id}/image": {
+   "get": {
+    "tags": [
+     "inspections"
+    ],
+    "summary": "Get Image",
+    "operationId": "get_image_api_v1_inspections__image_id__image_get",
+    "parameters": [
+     {
+      "name": "image_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Image Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response"
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/inspections/{image_id}/runs": {
+   "post": {
+    "tags": [
+     "inspections"
+    ],
+    "summary": "Rerun Inspection",
+    "description": "Re-run the algorithm interactively. Recorded as an ``interactive`` run; never replaces the pipeline result.",
+    "operationId": "rerun_inspection_api_v1_inspections__image_id__runs_post",
+    "parameters": [
+     {
+      "name": "image_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Image Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RerunRequest"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/InspectionRunOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/inspections/{image_id}/ground-truth": {
+   "get": {
+    "tags": [
+     "evaluation"
+    ],
+    "summary": "Ground Truth",
+    "operationId": "ground_truth_api_v1_inspections__image_id__ground_truth_get",
+    "parameters": [
+     {
+      "name": "image_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Image Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GroundTruthComparison"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/analytics/series": {
+   "get": {
+    "tags": [
+     "analytics"
+    ],
+    "summary": "Series",
+    "operationId": "series_api_v1_analytics_series_get",
+    "parameters": [
+     {
+      "name": "location",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "maxLength": 40,
+       "title": "Location"
+      }
+     },
+     {
+      "name": "dataset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 80
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "dataset key; defaults to the first synthetic dataset",
+       "title": "Dataset"
+      },
+      "description": "dataset key; defaults to the first synthetic dataset"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SeriesOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/analytics/spc": {
+   "get": {
+    "tags": [
+     "analytics"
+    ],
+    "summary": "Spc",
+    "operationId": "spc_api_v1_analytics_spc_get",
+    "parameters": [
+     {
+      "name": "location",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "maxLength": 40,
+       "title": "Location"
+      }
+     },
+     {
+      "name": "dataset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 80
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "dataset key; defaults to the first synthetic dataset",
+       "title": "Dataset"
+      },
+      "description": "dataset key; defaults to the first synthetic dataset"
+     },
+     {
+      "name": "baseline_n",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 1000,
+       "minimum": 10,
+       "default": 100,
+       "title": "Baseline N"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SpcOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/analytics/stations/{station}": {
+   "get": {
+    "tags": [
+     "analytics"
+    ],
+    "summary": "Station Comparison",
+    "operationId": "station_comparison_api_v1_analytics_stations__station__get",
+    "parameters": [
+     {
+      "name": "station",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Station"
+      }
+     },
+     {
+      "name": "location",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "maxLength": 40,
+       "title": "Location"
+      }
+     },
+     {
+      "name": "dataset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 80
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "dataset key; defaults to the first synthetic dataset",
+       "title": "Dataset"
+      },
+      "description": "dataset key; defaults to the first synthetic dataset"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/StationComparisonOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/units/{unit_id}/traceability": {
+   "get": {
+    "tags": [
+     "traceability"
+    ],
+    "summary": "Unit Traceability",
+    "operationId": "unit_traceability_api_v1_units__unit_id__traceability_get",
+    "parameters": [
+     {
+      "name": "unit_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Unit Id"
+      }
+     },
+     {
+      "name": "window_h",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 720,
+       "minimum": 1,
+       "default": 48,
+       "title": "Window H"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/TraceabilityOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/traceability": {
+   "get": {
+    "tags": [
+     "traceability"
+    ],
+    "summary": "Traceability By Serial",
+    "operationId": "traceability_by_serial_api_v1_traceability_get",
+    "parameters": [
+     {
+      "name": "serial",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "minLength": 3,
+       "maxLength": 40,
+       "title": "Serial"
+      }
+     },
+     {
+      "name": "dataset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 80
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "description": "dataset key; defaults to the first synthetic dataset",
+       "title": "Dataset"
+      },
+      "description": "dataset key; defaults to the first synthetic dataset"
+     },
+     {
+      "name": "window_h",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 720,
+       "minimum": 1,
+       "default": 48,
+       "title": "Window H"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/TraceabilityOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/investigations": {
+   "post": {
+    "tags": [
+     "investigations"
+    ],
+    "summary": "Create Investigation",
+    "operationId": "create_investigation_api_v1_investigations_post",
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InvestigationCreate"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/InvestigationOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   },
+   "get": {
+    "tags": [
+     "investigations"
+    ],
+    "summary": "List Investigations",
+    "operationId": "list_investigations_api_v1_investigations_get",
+    "parameters": [
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 100000,
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 500,
+       "minimum": 1,
+       "default": 20,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_InvestigationListItem_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/investigations/{inv_id}": {
+   "get": {
+    "tags": [
+     "investigations"
+    ],
+    "summary": "Get Investigation",
+    "operationId": "get_investigation_api_v1_investigations__inv_id__get",
+    "parameters": [
+     {
+      "name": "inv_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Inv Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/InvestigationOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/reports/investigations/{inv_id}.json": {
+   "get": {
+    "tags": [
+     "reports"
+    ],
+    "summary": "Report Json",
+    "operationId": "report_json_api_v1_reports_investigations__inv_id__json_get",
+    "parameters": [
+     {
+      "name": "inv_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Inv Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/reports/investigations/{inv_id}.md": {
+   "get": {
+    "tags": [
+     "reports"
+    ],
+    "summary": "Report Md",
+    "operationId": "report_md_api_v1_reports_investigations__inv_id__md_get",
+    "parameters": [
+     {
+      "name": "inv_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Inv Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "text/plain": {
+        "schema": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/simulations/corrective-actions": {
+   "post": {
+    "tags": [
+     "simulations"
+    ],
+    "summary": "Create Corrective Action",
+    "operationId": "create_corrective_action_api_v1_simulations_corrective_actions_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CorrectiveActionCreate"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "202": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/VerificationOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/simulations/verifications/{vr_id}": {
+   "get": {
+    "tags": [
+     "simulations"
+    ],
+    "summary": "Get Verification",
+    "operationId": "get_verification_api_v1_simulations_verifications__vr_id__get",
+    "parameters": [
+     {
+      "name": "vr_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Vr Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/VerificationOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/jobs/{job_id}": {
+   "get": {
+    "tags": [
+     "jobs"
+    ],
+    "summary": "Get Job",
+    "operationId": "get_job_api_v1_jobs__job_id__get",
+    "parameters": [
+     {
+      "name": "job_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Job Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/JobOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/pipelines/runs": {
+   "get": {
+    "tags": [
+     "pipelines"
+    ],
+    "summary": "List Pipeline Runs",
+    "operationId": "list_pipeline_runs_api_v1_pipelines_runs_get",
+    "parameters": [
+     {
+      "name": "pipeline",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "maxLength": 60
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Pipeline"
+      }
+     },
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "enum": [
+          "running",
+          "succeeded",
+          "failed",
+          "skipped"
+         ],
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 100000,
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 500,
+       "minimum": 1,
+       "default": 50,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_PipelineRunOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/pipelines/runs/{run_id}": {
+   "get": {
+    "tags": [
+     "pipelines"
+    ],
+    "summary": "Pipeline Run",
+    "operationId": "pipeline_run_api_v1_pipelines_runs__run_id__get",
+    "parameters": [
+     {
+      "name": "run_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Run Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PipelineRunDetail"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/pipelines/runs/{run_id}/errors": {
+   "get": {
+    "tags": [
+     "pipelines"
+    ],
+    "summary": "Pipeline Errors",
+    "operationId": "pipeline_errors_api_v1_pipelines_runs__run_id__errors_get",
+    "parameters": [
+     {
+      "name": "run_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Run Id"
+      }
+     },
+     {
+      "name": "page",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 100000,
+       "minimum": 1,
+       "default": 1,
+       "title": "Page"
+      }
+     },
+     {
+      "name": "page_size",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 500,
+       "minimum": 1,
+       "default": 100,
+       "title": "Page Size"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Page_PipelineErrorOut_"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/pipelines/runs/{run_id}/retry": {
+   "post": {
+    "tags": [
+     "pipelines"
+    ],
+    "summary": "Retry Pipeline Run",
+    "operationId": "retry_pipeline_run_api_v1_pipelines_runs__run_id__retry_post",
+    "parameters": [
+     {
+      "name": "run_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Run Id"
+      }
+     }
+    ],
+    "responses": {
+     "202": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/JobOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/evaluation/{kind}": {
+   "get": {
+    "tags": [
+     "evaluation"
+    ],
+    "summary": "Benchmark",
+    "operationId": "benchmark_api_v1_evaluation__kind__get",
+    "parameters": [
+     {
+      "name": "kind",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "enum": [
+        "vision",
+        "investigation"
+       ],
+       "type": "string",
+       "title": "Kind"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/BenchmarkOut"
+        }
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/v1/evaluation/vision/cases/{index}/image": {
+   "get": {
+    "tags": [
+     "evaluation"
+    ],
+    "summary": "Benchmark Case Image",
+    "description": "Re-render a benchmark case deterministically from its stored scene parameters.",
+    "operationId": "benchmark_case_image_api_v1_evaluation_vision_cases__index__image_get",
+    "parameters": [
+     {
+      "name": "index",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Index"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "components": {
+  "schemas": {
+   "BenchmarkOut": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "kind": {
+      "type": "string",
+      "title": "Kind"
+     },
+     "code_version": {
+      "type": "string",
+      "title": "Code Version"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "params": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Params"
+     },
+     "summary": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Summary"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "kind",
+     "code_version",
+     "created_at",
+     "params",
+     "summary"
+    ],
+    "title": "BenchmarkOut"
+   },
+   "CalibrationOut": {
+    "properties": {
+     "reference": {
+      "type": "string",
+      "title": "Reference"
+     },
+     "camera": {
+      "type": "string",
+      "title": "Camera"
+     },
+     "mm_per_px": {
+      "type": "number",
+      "title": "Mm Per Px"
+     },
+     "method": {
+      "type": "string",
+      "title": "Method"
+     },
+     "valid_from": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Valid From"
+     },
+     "valid_to": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Valid To"
+     }
+    },
+    "type": "object",
+    "required": [
+     "reference",
+     "camera",
+     "mm_per_px",
+     "method",
+     "valid_from",
+     "valid_to"
+    ],
+    "title": "CalibrationOut"
+   },
+   "CorrectiveActionCreate": {
+    "properties": {
+     "investigation_id": {
+      "type": "integer",
+      "title": "Investigation Id"
+     },
+     "target_code": {
+      "type": "string",
+      "maxLength": 40,
+      "minLength": 2,
+      "title": "Target Code"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "realign_fixture",
+       "recalibrate_tool"
+      ],
+      "title": "Kind",
+      "default": "realign_fixture"
+     },
+     "n_units": {
+      "type": "integer",
+      "maximum": 400.0,
+      "minimum": 30.0,
+      "title": "N Units",
+      "default": 120
+     },
+     "seed": {
+      "type": "integer",
+      "maximum": 2147483647.0,
+      "minimum": 0.0,
+      "title": "Seed",
+      "default": 1
+     }
+    },
+    "type": "object",
+    "required": [
+     "investigation_id",
+     "target_code"
+    ],
+    "title": "CorrectiveActionCreate"
+   },
+   "DatasetOut": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "key": {
+      "type": "string",
+      "title": "Key"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "kind": {
+      "type": "string",
+      "title": "Kind"
+     },
+     "provenance": {
+      "type": "string",
+      "title": "Provenance"
+     },
+     "license": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "License"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "units": {
+      "type": "integer",
+      "title": "Units"
+     },
+     "images": {
+      "type": "integer",
+      "title": "Images"
+     },
+     "measured": {
+      "type": "integer",
+      "title": "Measured"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "key",
+     "name",
+     "kind",
+     "provenance",
+     "license",
+     "created_at",
+     "units",
+     "images",
+     "measured"
+    ],
+    "title": "DatasetOut"
+   },
+   "GroundTruthComparison": {
+    "properties": {
+     "image_id": {
+      "type": "integer",
+      "title": "Image Id"
+     },
+     "available": {
+      "type": "boolean",
+      "title": "Available"
+     },
+     "true_gap_mm": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "True Gap Mm"
+     },
+     "measured_gap_mm": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Measured Gap Mm"
+     },
+     "error_um": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error Um"
+     },
+     "generator_version": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Generator Version"
+     },
+     "note": {
+      "type": "string",
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "required": [
+     "image_id",
+     "available",
+     "true_gap_mm",
+     "measured_gap_mm",
+     "error_um",
+     "generator_version",
+     "note"
+    ],
+    "title": "GroundTruthComparison"
+   },
+   "GroupStat": {
+    "properties": {
+     "equipment": {
+      "type": "string",
+      "title": "Equipment"
+     },
+     "n": {
+      "type": "integer",
+      "title": "N"
+     },
+     "mean_mm": {
+      "type": "number",
+      "title": "Mean Mm"
+     },
+     "sd_mm": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sd Mm"
+     },
+     "median_mm": {
+      "type": "number",
+      "title": "Median Mm"
+     },
+     "p05_mm": {
+      "type": "number",
+      "title": "P05 Mm"
+     },
+     "p95_mm": {
+      "type": "number",
+      "title": "P95 Mm"
+     },
+     "n_oot": {
+      "type": "integer",
+      "title": "N Oot"
+     },
+     "oot_rate": {
+      "type": "number",
+      "title": "Oot Rate"
+     },
+     "values": {
+      "items": {
+       "type": "number"
+      },
+      "type": "array",
+      "title": "Values"
+     }
+    },
+    "type": "object",
+    "required": [
+     "equipment",
+     "n",
+     "mean_mm",
+     "sd_mm",
+     "median_mm",
+     "p05_mm",
+     "p95_mm",
+     "n_oot",
+     "oot_rate",
+     "values"
+    ],
+    "title": "GroupStat"
+   },
+   "HTTPValidationError": {
+    "properties": {
+     "detail": {
+      "items": {
+       "$ref": "#/components/schemas/ValidationError"
+      },
+      "type": "array",
+      "title": "Detail"
+     }
+    },
+    "type": "object",
+    "title": "HTTPValidationError"
+   },
+   "Health": {
+    "properties": {
+     "status": {
+      "type": "string",
+      "enum": [
+       "ok",
+       "degraded"
+      ],
+      "title": "Status"
+     },
+     "database": {
+      "type": "string",
+      "enum": [
+       "ok",
+       "unavailable"
+      ],
+      "title": "Database"
+     },
+     "version": {
+      "type": "string",
+      "title": "Version"
+     },
+     "demo_readonly": {
+      "type": "boolean",
+      "title": "Demo Readonly"
+     }
+    },
+    "type": "object",
+    "required": [
+     "status",
+     "database",
+     "version",
+     "demo_readonly"
+    ],
+    "title": "Health"
+   },
+   "HypothesisOut": {
+    "properties": {
+     "rank": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rank"
+     },
+     "factor_type": {
+      "type": "string",
+      "title": "Factor Type"
+     },
+     "factor": {
+      "type": "string",
+      "title": "Factor"
+     },
+     "level": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Level"
+     },
+     "station_code": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Station Code"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "effect_mm": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Effect Mm"
+     },
+     "ci_low": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ci Low"
+     },
+     "ci_high": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ci High"
+     },
+     "p_value": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "P Value"
+     },
+     "q_value": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Q Value"
+     },
+     "attributable_shift_mm": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Attributable Shift Mm"
+     },
+     "explained_fraction": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Explained Fraction"
+     },
+     "significant": {
+      "type": "boolean",
+      "title": "Significant"
+     },
+     "n_pre": {
+      "type": "integer",
+      "title": "N Pre"
+     },
+     "n_post": {
+      "type": "integer",
+      "title": "N Post"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     },
+     "evidence": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Evidence"
+     }
+    },
+    "type": "object",
+    "required": [
+     "rank",
+     "factor_type",
+     "factor",
+     "level",
+     "station_code",
+     "status",
+     "effect_mm",
+     "ci_low",
+     "ci_high",
+     "p_value",
+     "q_value",
+     "attributable_shift_mm",
+     "explained_fraction",
+     "significant",
+     "n_pre",
+     "n_post",
+     "reason",
+     "evidence"
+    ],
+    "title": "HypothesisOut"
+   },
+   "InspectionDetail": {
+    "properties": {
+     "image_id": {
+      "type": "integer",
+      "title": "Image Id"
+     },
+     "serial": {
+      "type": "string",
+      "title": "Serial"
+     },
+     "unit_id": {
+      "type": "integer",
+      "title": "Unit Id"
+     },
+     "dataset_key": {
+      "type": "string",
+      "title": "Dataset Key"
+     },
+     "location": {
+      "$ref": "#/components/schemas/LocationOut"
+     },
+     "captured_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Captured At"
+     },
+     "image_url": {
+      "type": "string",
+      "title": "Image Url"
+     },
+     "width": {
+      "type": "integer",
+      "title": "Width"
+     },
+     "height": {
+      "type": "integer",
+      "title": "Height"
+     },
+     "sha256": {
+      "type": "string",
+      "title": "Sha256"
+     },
+     "calibration": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/CalibrationOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "current_run": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/InspectionRunOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "runs": {
+      "items": {
+       "$ref": "#/components/schemas/InspectionRunOut"
+      },
+      "type": "array",
+      "title": "Runs"
+     },
+     "provenance": {
+      "$ref": "#/components/schemas/Provenance"
+     },
+     "investigation_ids": {
+      "items": {
+       "type": "integer"
+      },
+      "type": "array",
+      "title": "Investigation Ids"
+     },
+     "neighbors": {
+      "additionalProperties": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "type": "object",
+      "title": "Neighbors"
+     }
+    },
+    "type": "object",
+    "required": [
+     "image_id",
+     "serial",
+     "unit_id",
+     "dataset_key",
+     "location",
+     "captured_at",
+     "image_url",
+     "width",
+     "height",
+     "sha256",
+     "calibration",
+     "current_run",
+     "runs",
+     "provenance",
+     "investigation_ids",
+     "neighbors"
+    ],
+    "title": "InspectionDetail"
+   },
+   "InspectionListItem": {
+    "properties": {
+     "image_id": {
+      "type": "integer",
+      "title": "Image Id"
+     },
+     "serial": {
+      "type": "string",
+      "title": "Serial"
+     },
+     "unit_id": {
+      "type": "integer",
+      "title": "Unit Id"
+     },
+     "location": {
+      "type": "string",
+      "title": "Location"
+     },
+     "captured_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Captured At"
+     },
+     "run_status": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "ok",
+         "failed"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Run Status"
+     },
+     "gap_mm": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Gap Mm"
+     },
+     "deviation_mm": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Deviation Mm"
+     },
+     "tolerance_status": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "in_tolerance",
+         "out_low",
+         "out_high",
+         "not_evaluable"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tolerance Status"
+     },
+     "flags": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Flags"
+     }
+    },
+    "type": "object",
+    "required": [
+     "image_id",
+     "serial",
+     "unit_id",
+     "location",
+     "captured_at",
+     "run_status",
+     "gap_mm",
+     "deviation_mm",
+     "tolerance_status",
+     "flags"
+    ],
+    "title": "InspectionListItem"
+   },
+   "InspectionRunOut": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "trigger": {
+      "type": "string",
+      "title": "Trigger"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "ok",
+       "failed"
+      ],
+      "title": "Status"
+     },
+     "algorithm": {
+      "type": "string",
+      "title": "Algorithm"
+     },
+     "algorithm_version": {
+      "type": "string",
+      "title": "Algorithm Version"
+     },
+     "algorithm_params": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Algorithm Params"
+     },
+     "failure_code": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Failure Code"
+     },
+     "failure_message": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Failure Message"
+     },
+     "duration_ms": {
+      "type": "number",
+      "title": "Duration Ms"
+     },
+     "flags": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Flags"
+     },
+     "diagnostics": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Diagnostics"
+     },
+     "overlay": {
+      "$ref": "#/components/schemas/Overlay"
+     },
+     "measurement": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/MeasurementOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "is_current": {
+      "type": "boolean",
+      "title": "Is Current"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "trigger",
+     "status",
+     "algorithm",
+     "algorithm_version",
+     "algorithm_params",
+     "failure_code",
+     "failure_message",
+     "duration_ms",
+     "flags",
+     "diagnostics",
+     "overlay",
+     "measurement",
+     "created_at",
+     "is_current"
+    ],
+    "title": "InspectionRunOut"
+   },
+   "InvestigationCreate": {
+    "properties": {
+     "image_id": {
+      "type": "integer",
+      "title": "Image Id"
+     },
+     "baseline_n": {
+      "type": "integer",
+      "maximum": 400.0,
+      "minimum": 20.0,
+      "title": "Baseline N",
+      "default": 60
+     },
+     "alpha": {
+      "type": "number",
+      "exclusiveMaximum": 0.5,
+      "exclusiveMinimum": 0.0,
+      "title": "Alpha",
+      "default": 0.05
+     }
+    },
+    "type": "object",
+    "required": [
+     "image_id"
+    ],
+    "title": "InvestigationCreate"
+   },
+   "InvestigationListItem": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "serial": {
+      "type": "string",
+      "title": "Serial"
+     },
+     "location": {
+      "type": "string",
+      "title": "Location"
+     },
+     "image_id": {
+      "type": "integer",
+      "title": "Image Id"
+     },
+     "top_hypothesis": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Top Hypothesis"
+     },
+     "top_explained_fraction": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Top Explained Fraction"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "status",
+     "created_at",
+     "serial",
+     "location",
+     "image_id",
+     "top_hypothesis",
+     "top_explained_fraction"
+    ],
+    "title": "InvestigationListItem"
+   },
+   "InvestigationOut": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "method": {
+      "type": "string",
+      "title": "Method"
+     },
+     "method_version": {
+      "type": "string",
+      "title": "Method Version"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "duration_ms": {
+      "type": "number",
+      "title": "Duration Ms"
+     },
+     "trigger": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Trigger"
+     },
+     "location": {
+      "$ref": "#/components/schemas/LocationOut"
+     },
+     "params": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Params"
+     },
+     "change_point": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Change Point"
+     },
+     "summary": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Summary"
+     },
+     "limitations": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Limitations"
+     },
+     "hypotheses": {
+      "items": {
+       "$ref": "#/components/schemas/HypothesisOut"
+      },
+      "type": "array",
+      "title": "Hypotheses"
+     },
+     "evidence": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Evidence"
+     },
+     "provenance": {
+      "$ref": "#/components/schemas/Provenance"
+     },
+     "verification_runs": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "Verification Runs"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "status",
+     "method",
+     "method_version",
+     "created_at",
+     "duration_ms",
+     "trigger",
+     "location",
+     "params",
+     "change_point",
+     "summary",
+     "limitations",
+     "hypotheses",
+     "evidence",
+     "provenance",
+     "verification_runs"
+    ],
+    "title": "InvestigationOut"
+   },
+   "JobOut": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "kind": {
+      "type": "string",
+      "title": "Kind"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "progress": {
+      "type": "number",
+      "title": "Progress"
+     },
+     "message": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Message"
+     },
+     "error": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error"
+     },
+     "attempts": {
+      "type": "integer",
+      "title": "Attempts"
+     },
+     "max_attempts": {
+      "type": "integer",
+      "title": "Max Attempts"
+     },
+     "result": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Result"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "started_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Started At"
+     },
+     "finished_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Finished At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "kind",
+     "status",
+     "progress",
+     "message",
+     "error",
+     "attempts",
+     "max_attempts",
+     "result",
+     "created_at",
+     "started_at",
+     "finished_at"
+    ],
+    "title": "JobOut"
+   },
+   "LocationOut": {
+    "properties": {
+     "code": {
+      "type": "string",
+      "title": "Code"
+     },
+     "name": {
+      "type": "string",
+      "title": "Name"
+     },
+     "description": {
+      "type": "string",
+      "title": "Description"
+     },
+     "nominal_mm": {
+      "type": "number",
+      "title": "Nominal Mm"
+     },
+     "lower_tol_mm": {
+      "type": "number",
+      "title": "Lower Tol Mm"
+     },
+     "upper_tol_mm": {
+      "type": "number",
+      "title": "Upper Tol Mm"
+     },
+     "lsl_mm": {
+      "type": "number",
+      "title": "Lsl Mm"
+     },
+     "usl_mm": {
+      "type": "number",
+      "title": "Usl Mm"
+     }
+    },
+    "type": "object",
+    "required": [
+     "code",
+     "name",
+     "description",
+     "nominal_mm",
+     "lower_tol_mm",
+     "upper_tol_mm",
+     "lsl_mm",
+     "usl_mm"
+    ],
+    "title": "LocationOut"
+   },
+   "MeasurementOut": {
+    "properties": {
+     "gap_px": {
+      "type": "number",
+      "title": "Gap Px"
+     },
+     "gap_mm": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Gap Mm"
+     },
+     "std_error_mm": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Std Error Mm"
+     },
+     "deviation_mm": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Deviation Mm"
+     },
+     "angle_deg": {
+      "type": "number",
+      "title": "Angle Deg"
+     },
+     "calibrated": {
+      "type": "boolean",
+      "title": "Calibrated"
+     },
+     "status": {
+      "type": "string",
+      "enum": [
+       "in_tolerance",
+       "out_low",
+       "out_high",
+       "not_evaluable"
+      ],
+      "title": "Status"
+     }
+    },
+    "type": "object",
+    "required": [
+     "gap_px",
+     "gap_mm",
+     "std_error_mm",
+     "deviation_mm",
+     "angle_deg",
+     "calibrated",
+     "status"
+    ],
+    "title": "MeasurementOut"
+   },
+   "Overlay": {
+    "properties": {
+     "rows": {
+      "items": {
+       "$ref": "#/components/schemas/OverlayRow"
+      },
+      "type": "array",
+      "title": "Rows",
+      "default": []
+     },
+     "left_line": {
+      "anyOf": [
+       {
+        "items": {
+         "items": {
+          "type": "number"
+         },
+         "type": "array"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Left Line"
+     },
+     "right_line": {
+      "anyOf": [
+       {
+        "items": {
+         "items": {
+          "type": "number"
+         },
+         "type": "array"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Right Line"
+     },
+     "measurement": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "items": {
+          "type": "number"
+         },
+         "type": "array"
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Measurement"
+     },
+     "roi": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Roi"
+     }
+    },
+    "type": "object",
+    "title": "Overlay"
+   },
+   "OverlayRow": {
+    "properties": {
+     "y": {
+      "type": "number",
+      "title": "Y"
+     },
+     "xl": {
+      "type": "number",
+      "title": "Xl"
+     },
+     "xr": {
+      "type": "number",
+      "title": "Xr"
+     },
+     "inlier": {
+      "type": "boolean",
+      "title": "Inlier"
+     }
+    },
+    "type": "object",
+    "required": [
+     "y",
+     "xl",
+     "xr",
+     "inlier"
+    ],
+    "title": "OverlayRow"
+   },
+   "OverviewOut": {
+    "properties": {
+     "dataset": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/DatasetOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "locations": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "Locations"
+     },
+     "latest_oot": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "Latest Oot"
+     },
+     "trend": {
+      "items": {
+       "$ref": "#/components/schemas/TrendBucket"
+      },
+      "type": "array",
+      "title": "Trend"
+     },
+     "recent_investigations": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "Recent Investigations"
+     },
+     "pipelines": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "Pipelines"
+     },
+     "datasets": {
+      "items": {
+       "$ref": "#/components/schemas/DatasetOut"
+      },
+      "type": "array",
+      "title": "Datasets"
+     },
+     "provenance": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Provenance"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "type": "object",
+    "required": [
+     "dataset",
+     "locations",
+     "latest_oot",
+     "trend",
+     "recent_investigations",
+     "pipelines",
+     "datasets",
+     "provenance"
+    ],
+    "title": "OverviewOut"
+   },
+   "Page_InspectionListItem_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/InspectionListItem"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "total",
+     "page",
+     "page_size"
+    ],
+    "title": "Page[InspectionListItem]"
+   },
+   "Page_InvestigationListItem_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/InvestigationListItem"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "total",
+     "page",
+     "page_size"
+    ],
+    "title": "Page[InvestigationListItem]"
+   },
+   "Page_PipelineErrorOut_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/PipelineErrorOut"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "total",
+     "page",
+     "page_size"
+    ],
+    "title": "Page[PipelineErrorOut]"
+   },
+   "Page_PipelineRunOut_": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/PipelineRunOut"
+      },
+      "type": "array",
+      "title": "Items"
+     },
+     "total": {
+      "type": "integer",
+      "title": "Total"
+     },
+     "page": {
+      "type": "integer",
+      "title": "Page"
+     },
+     "page_size": {
+      "type": "integer",
+      "title": "Page Size"
+     }
+    },
+    "type": "object",
+    "required": [
+     "items",
+     "total",
+     "page",
+     "page_size"
+    ],
+    "title": "Page[PipelineRunOut]"
+   },
+   "PipelineErrorOut": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "file_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "File Name"
+     },
+     "row_number": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Row Number"
+     },
+     "field": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Field"
+     },
+     "reason": {
+      "type": "string",
+      "title": "Reason"
+     },
+     "raw": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Raw"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "file_name",
+     "row_number",
+     "field",
+     "reason",
+     "raw"
+    ],
+    "title": "PipelineErrorOut"
+   },
+   "PipelineRunDetail": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "pipeline": {
+      "type": "string",
+      "title": "Pipeline"
+     },
+     "dataset_key": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Dataset Key"
+     },
+     "source_uri": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source Uri"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Started At"
+     },
+     "finished_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Finished At"
+     },
+     "duration_s": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Duration S"
+     },
+     "records_in": {
+      "type": "integer",
+      "title": "Records In"
+     },
+     "records_loaded": {
+      "type": "integer",
+      "title": "Records Loaded"
+     },
+     "records_rejected": {
+      "type": "integer",
+      "title": "Records Rejected"
+     },
+     "records_duplicate": {
+      "type": "integer",
+      "title": "Records Duplicate"
+     },
+     "records_skipped": {
+      "type": "integer",
+      "title": "Records Skipped"
+     },
+     "error_message": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error Message"
+     },
+     "retry_of_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Retry Of Id"
+     },
+     "metrics": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Metrics"
+     },
+     "params": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Params"
+     },
+     "data_quality": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "Data Quality"
+     },
+     "imports": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "Imports"
+     },
+     "error_summary": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "Error Summary"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "pipeline",
+     "dataset_key",
+     "source_uri",
+     "status",
+     "started_at",
+     "finished_at",
+     "duration_s",
+     "records_in",
+     "records_loaded",
+     "records_rejected",
+     "records_duplicate",
+     "records_skipped",
+     "error_message",
+     "retry_of_id",
+     "metrics",
+     "params",
+     "data_quality",
+     "imports",
+     "error_summary"
+    ],
+    "title": "PipelineRunDetail"
+   },
+   "PipelineRunOut": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "pipeline": {
+      "type": "string",
+      "title": "Pipeline"
+     },
+     "dataset_key": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Dataset Key"
+     },
+     "source_uri": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source Uri"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Started At"
+     },
+     "finished_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Finished At"
+     },
+     "duration_s": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Duration S"
+     },
+     "records_in": {
+      "type": "integer",
+      "title": "Records In"
+     },
+     "records_loaded": {
+      "type": "integer",
+      "title": "Records Loaded"
+     },
+     "records_rejected": {
+      "type": "integer",
+      "title": "Records Rejected"
+     },
+     "records_duplicate": {
+      "type": "integer",
+      "title": "Records Duplicate"
+     },
+     "records_skipped": {
+      "type": "integer",
+      "title": "Records Skipped"
+     },
+     "error_message": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error Message"
+     },
+     "retry_of_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Retry Of Id"
+     },
+     "metrics": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Metrics"
+     },
+     "params": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Params"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "pipeline",
+     "dataset_key",
+     "source_uri",
+     "status",
+     "started_at",
+     "finished_at",
+     "duration_s",
+     "records_in",
+     "records_loaded",
+     "records_rejected",
+     "records_duplicate",
+     "records_skipped",
+     "error_message",
+     "retry_of_id",
+     "metrics",
+     "params"
+    ],
+    "title": "PipelineRunOut"
+   },
+   "Provenance": {
+    "properties": {
+     "dataset_key": {
+      "type": "string",
+      "title": "Dataset Key"
+     },
+     "dataset_kind": {
+      "type": "string",
+      "enum": [
+       "synthetic",
+       "real"
+      ],
+      "title": "Dataset Kind"
+     },
+     "simulated": {
+      "type": "boolean",
+      "title": "Simulated"
+     },
+     "statement": {
+      "type": "string",
+      "title": "Statement"
+     }
+    },
+    "type": "object",
+    "required": [
+     "dataset_key",
+     "dataset_kind",
+     "simulated",
+     "statement"
+    ],
+    "title": "Provenance"
+   },
+   "RerunRequest": {
+    "properties": {
+     "smoothing_sigma_px": {
+      "type": "number",
+      "maximum": 6.0,
+      "minimum": 0.0,
+      "title": "Smoothing Sigma Px",
+      "default": 1.5
+     },
+     "row_step": {
+      "type": "integer",
+      "maximum": 32.0,
+      "minimum": 1.0,
+      "title": "Row Step",
+      "default": 4
+     },
+     "min_edge_gradient": {
+      "type": "number",
+      "maximum": 60.0,
+      "minimum": 0.5,
+      "title": "Min Edge Gradient",
+      "default": 6.0
+     },
+     "outlier_mad_k": {
+      "type": "number",
+      "maximum": 10.0,
+      "minimum": 1.5,
+      "title": "Outlier Mad K",
+      "default": 3.5
+     }
+    },
+    "type": "object",
+    "title": "RerunRequest"
+   },
+   "RouteStep": {
+    "properties": {
+     "station": {
+      "type": "string",
+      "title": "Station"
+     },
+     "station_name": {
+      "type": "string",
+      "title": "Station Name"
+     },
+     "sequence": {
+      "type": "integer",
+      "title": "Sequence"
+     },
+     "equipment": {
+      "type": "string",
+      "title": "Equipment"
+     },
+     "equipment_kind": {
+      "type": "string",
+      "title": "Equipment Kind"
+     },
+     "equipment_name": {
+      "type": "string",
+      "title": "Equipment Name"
+     },
+     "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Started At"
+     },
+     "ended_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Ended At"
+     },
+     "parameters": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "Parameters"
+     }
+    },
+    "type": "object",
+    "required": [
+     "station",
+     "station_name",
+     "sequence",
+     "equipment",
+     "equipment_kind",
+     "equipment_name",
+     "started_at",
+     "ended_at",
+     "parameters"
+    ],
+    "title": "RouteStep"
+   },
+   "SeriesOut": {
+    "properties": {
+     "location": {
+      "$ref": "#/components/schemas/LocationOut"
+     },
+     "points": {
+      "items": {
+       "$ref": "#/components/schemas/SeriesPoint"
+      },
+      "type": "array",
+      "title": "Points"
+     },
+     "failed_runs": {
+      "type": "integer",
+      "title": "Failed Runs"
+     },
+     "provenance": {
+      "$ref": "#/components/schemas/Provenance"
+     }
+    },
+    "type": "object",
+    "required": [
+     "location",
+     "points",
+     "failed_runs",
+     "provenance"
+    ],
+    "title": "SeriesOut"
+   },
+   "SeriesPoint": {
+    "properties": {
+     "image_id": {
+      "type": "integer",
+      "title": "Image Id"
+     },
+     "serial": {
+      "type": "string",
+      "title": "Serial"
+     },
+     "built_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Built At"
+     },
+     "gap_mm": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Gap Mm"
+     },
+     "deviation_mm": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Deviation Mm"
+     },
+     "tolerance_status": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "in_tolerance",
+         "out_low",
+         "out_high",
+         "not_evaluable"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tolerance Status"
+     },
+     "route": {
+      "additionalProperties": {
+       "type": "string"
+      },
+      "type": "object",
+      "title": "Route"
+     },
+     "batch": {
+      "type": "string",
+      "title": "Batch"
+     }
+    },
+    "type": "object",
+    "required": [
+     "image_id",
+     "serial",
+     "built_at",
+     "gap_mm",
+     "deviation_mm",
+     "tolerance_status",
+     "route",
+     "batch"
+    ],
+    "title": "SeriesPoint"
+   },
+   "SpcOut": {
+    "properties": {
+     "location": {
+      "$ref": "#/components/schemas/LocationOut"
+     },
+     "applicable": {
+      "type": "boolean",
+      "title": "Applicable"
+     },
+     "n": {
+      "type": "integer",
+      "title": "N"
+     },
+     "baseline_n": {
+      "type": "integer",
+      "title": "Baseline N"
+     },
+     "center": {
+      "type": "number",
+      "title": "Center"
+     },
+     "sigma_hat": {
+      "type": "number",
+      "title": "Sigma Hat"
+     },
+     "ucl": {
+      "type": "number",
+      "title": "Ucl"
+     },
+     "lcl": {
+      "type": "number",
+      "title": "Lcl"
+     },
+     "mr_bar": {
+      "type": "number",
+      "title": "Mr Bar"
+     },
+     "mr_ucl": {
+      "type": "number",
+      "title": "Mr Ucl"
+     },
+     "values": {
+      "items": {
+       "type": "number"
+      },
+      "type": "array",
+      "title": "Values"
+     },
+     "moving_range": {
+      "items": {
+       "anyOf": [
+        {
+         "type": "number"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "type": "array",
+      "title": "Moving Range"
+     },
+     "image_ids": {
+      "items": {
+       "type": "integer"
+      },
+      "type": "array",
+      "title": "Image Ids"
+     },
+     "serials": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Serials"
+     },
+     "built_at": {
+      "items": {
+       "type": "string",
+       "format": "date-time"
+      },
+      "type": "array",
+      "title": "Built At"
+     },
+     "signals": {
+      "items": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "type": "array",
+      "title": "Signals"
+     },
+     "first_signal_index": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "First Signal Index"
+     },
+     "warnings": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "title": "Warnings"
+     },
+     "capability": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "anyOf": [
+          {
+           "type": "number"
+          },
+          {
+           "type": "null"
+          }
+         ]
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Capability"
+     },
+     "capability_note": {
+      "type": "string",
+      "title": "Capability Note"
+     }
+    },
+    "type": "object",
+    "required": [
+     "location",
+     "applicable",
+     "n",
+     "baseline_n",
+     "center",
+     "sigma_hat",
+     "ucl",
+     "lcl",
+     "mr_bar",
+     "mr_ucl",
+     "values",
+     "moving_range",
+     "image_ids",
+     "serials",
+     "built_at",
+     "signals",
+     "first_signal_index",
+     "warnings",
+     "capability",
+     "capability_note"
+    ],
+    "title": "SpcOut"
+   },
+   "StationComparisonOut": {
+    "properties": {
+     "location": {
+      "$ref": "#/components/schemas/LocationOut"
+     },
+     "station": {
+      "type": "string",
+      "title": "Station"
+     },
+     "groups": {
+      "items": {
+       "$ref": "#/components/schemas/GroupStat"
+      },
+      "type": "array",
+      "title": "Groups"
+     },
+     "anova_p": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Anova P"
+     },
+     "kruskal_p": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kruskal P"
+     },
+     "note": {
+      "type": "string",
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "required": [
+     "location",
+     "station",
+     "groups",
+     "anova_p",
+     "kruskal_p",
+     "note"
+    ],
+    "title": "StationComparisonOut"
+   },
+   "TraceabilityOut": {
+    "properties": {
+     "unit_id": {
+      "type": "integer",
+      "title": "Unit Id"
+     },
+     "serial": {
+      "type": "string",
+      "title": "Serial"
+     },
+     "batch": {
+      "type": "string",
+      "title": "Batch"
+     },
+     "built_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Built At"
+     },
+     "line": {
+      "type": "string",
+      "title": "Line"
+     },
+     "dataset_key": {
+      "type": "string",
+      "title": "Dataset Key"
+     },
+     "route": {
+      "items": {
+       "$ref": "#/components/schemas/RouteStep"
+      },
+      "type": "array",
+      "title": "Route"
+     },
+     "inspections": {
+      "items": {
+       "$ref": "#/components/schemas/InspectionListItem"
+      },
+      "type": "array",
+      "title": "Inspections"
+     },
+     "equipment_events": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "type": "array",
+      "title": "Equipment Events"
+     },
+     "provenance": {
+      "$ref": "#/components/schemas/Provenance"
+     }
+    },
+    "type": "object",
+    "required": [
+     "unit_id",
+     "serial",
+     "batch",
+     "built_at",
+     "line",
+     "dataset_key",
+     "route",
+     "inspections",
+     "equipment_events",
+     "provenance"
+    ],
+    "title": "TraceabilityOut"
+   },
+   "TrendBucket": {
+    "properties": {
+     "location": {
+      "type": "string",
+      "title": "Location"
+     },
+     "bucket": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Bucket"
+     },
+     "n": {
+      "type": "integer",
+      "title": "N"
+     },
+     "mean_deviation_mm": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Mean Deviation Mm"
+     },
+     "sd_deviation_mm": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sd Deviation Mm"
+     },
+     "n_oot": {
+      "type": "integer",
+      "title": "N Oot"
+     }
+    },
+    "type": "object",
+    "required": [
+     "location",
+     "bucket",
+     "n",
+     "mean_deviation_mm",
+     "sd_deviation_mm",
+     "n_oot"
+    ],
+    "title": "TrendBucket"
+   },
+   "ValidationError": {
+    "properties": {
+     "loc": {
+      "items": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "integer"
+        }
+       ]
+      },
+      "type": "array",
+      "title": "Location"
+     },
+     "msg": {
+      "type": "string",
+      "title": "Message"
+     },
+     "type": {
+      "type": "string",
+      "title": "Error Type"
+     },
+     "input": {
+      "title": "Input"
+     },
+     "ctx": {
+      "type": "object",
+      "title": "Context"
+     }
+    },
+    "type": "object",
+    "required": [
+     "loc",
+     "msg",
+     "type"
+    ],
+    "title": "ValidationError"
+   },
+   "VerificationOut": {
+    "properties": {
+     "id": {
+      "type": "integer",
+      "title": "Id"
+     },
+     "status": {
+      "type": "string",
+      "title": "Status"
+     },
+     "n_units": {
+      "type": "integer",
+      "title": "N Units"
+     },
+     "seed": {
+      "type": "integer",
+      "title": "Seed"
+     },
+     "target_code": {
+      "type": "string",
+      "title": "Target Code"
+     },
+     "kind": {
+      "type": "string",
+      "title": "Kind"
+     },
+     "investigation_id": {
+      "type": "integer",
+      "title": "Investigation Id"
+     },
+     "job": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/JobOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "result": {
+      "additionalProperties": true,
+      "type": "object",
+      "title": "Result"
+     },
+     "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Created At"
+     },
+     "finished_at": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "date-time"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Finished At"
+     }
+    },
+    "type": "object",
+    "required": [
+     "id",
+     "status",
+     "n_units",
+     "seed",
+     "target_code",
+     "kind",
+     "investigation_id",
+     "job",
+     "result",
+     "created_at",
+     "finished_at"
+    ],
+    "title": "VerificationOut"
+   }
+  }
+ }
+}

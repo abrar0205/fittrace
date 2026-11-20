@@ -1,0 +1,112 @@
+/* ------------------------------------------------------------------ inspection viewer */
+
+.viewer { display: grid; gap: 0; }
+.ruler-top { height: 22px; background: var(--panel-2); border: 1px solid var(--line); border-bottom: 0; border-radius: var(--r-1) var(--r-1) 0 0; overflow: hidden; }
+.ruler-top line { stroke: var(--ink-3); stroke-width: 1; shape-rendering: crispEdges; }
+.ruler-top text { font-size: 10px; fill: var(--ink-3); font-family: var(--font-cond); }
+.ruler-top .unit { fill: var(--ink-2); }
+
+.viewport {
+  position: relative; overflow: hidden; background: #20262b; border: 1px solid var(--ink); cursor: crosshair;
+  touch-action: none; user-select: none;
+}
+.viewport.dragging { cursor: grabbing; }
+.viewport canvas { position: absolute; inset: 0; image-rendering: pixelated; }
+.viewport .overlay { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
+.viewer-msg { position: absolute; inset: 0; display: grid; place-items: center; color: #f0b3ad; font-size: var(--t-ui); }
+
+.ov-roi { fill: none; stroke: var(--trace-bright); stroke-opacity: 0.45; stroke-dasharray: 5 4; stroke-width: 1; }
+.ov-pt path { stroke: var(--trace-bright); stroke-width: 1.4; }
+.ov-pt.rejected circle { fill: none; stroke: #ffffff; stroke-width: 1.2; stroke-opacity: 0.9; }
+.ov-fit line { stroke: var(--trace-bright); stroke-width: 1.25; stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 0.55s var(--ease) forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.scanline rect { fill: rgba(47, 208, 217, 0.1); }
+.scanline line { stroke: var(--trace-bright); stroke-width: 1.5; }
+
+.ov-dim { animation: dim-in 0.35s 0.25s var(--ease) both; }
+@keyframes dim-in { from { opacity: 0; } to { opacity: 1; } }
+.ov-dim line.ext { stroke: #ffffff; stroke-opacity: 0.85; stroke-width: 1; }
+.ov-dim line.dimline { stroke: #ffffff; stroke-width: 1.25; }
+.ov-dim line.measrow { stroke: var(--trace-bright); stroke-width: 1; stroke-dasharray: 2 3; }
+.ov-dim path { fill: #ffffff; }
+.ov-dim circle { fill: var(--trace-bright); }
+.ov-dim .dimbox { fill: rgba(23, 33, 42, 0.92); stroke: var(--trace-bright); stroke-width: 1; }
+.ov-dim .dimtext { fill: #fff; font-family: var(--font-cond); font-size: 16px; font-weight: 600; }
+.ov-dim .dimsub { fill: #e6edf1; font-size: 11px; paint-order: stroke; stroke: rgba(23, 33, 42, 0.85); stroke-width: 3px; }
+.ov-dim .dimrow { fill: #cfe9eb; font-size: 10.5px; paint-order: stroke; stroke: rgba(23, 33, 42, 0.8); stroke-width: 3px; }
+.ov-dim.oot .dimbox { stroke: #f0b54a; }
+.ov-dim.oot .dimtext { fill: #ffd78c; }
+
+.crosshair line, line.crosshair { stroke: #ffffff; stroke-opacity: 0.28; stroke-width: 1; shape-rendering: crispEdges; }
+.ov-fail-box { fill: rgba(23, 33, 42, 0.92); stroke: #e5675c; }
+.ov-fail-title { fill: #ffb4ab; font-weight: 600; font-size: 13px; }
+.ov-fail-msg { fill: #e6edf1; font-size: 12px; }
+
+.loupe {
+  position: absolute; width: 148px; height: 148px; border-radius: 50%; border: 2px solid #fff; pointer-events: none;
+  box-shadow: 0 0 0 1px var(--ink), 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+.zoom-reset { position: absolute; right: 8px; bottom: 8px; }
+
+.viewer-status {
+  display: flex; flex-wrap: wrap; gap: 4px 16px; min-height: 30px; align-items: center; padding: 6px 10px; font-size: var(--t-sm);
+  color: var(--ink-2); border: 1px solid var(--line); border-top: 0; background: var(--panel); border-radius: 0 0 var(--r-1) var(--r-1);
+}
+.viewer-status b { font-weight: 600; color: var(--ink); font-family: var(--font-cond); }
+.trace-ink { color: var(--trace); }
+
+/* ------------------------------------------------------------------ gauges */
+
+.gauge .g-base { stroke: var(--ink); stroke-width: 1.5; }
+.gauge .g-tick { stroke: var(--ink-2); stroke-width: 1; shape-rendering: crispEdges; }
+.gauge .g-label { font-size: 11px; fill: var(--ink-3); font-family: var(--font-cond); }
+.gauge .g-jaw { stroke: var(--ink); stroke-width: 2; }
+.gauge .g-spec { font-size: 11px; fill: var(--ink-2); font-family: var(--font-cond); }
+.gauge .g-nominal { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 2 2; }
+.gauge .hatch { stroke: var(--line-strong); stroke-width: 1.4; }
+.gauge .hatch.oot { stroke: var(--amber-line); }
+.gauge .zone-oot { stroke: var(--amber); stroke-width: 1; }
+.gauge .g-needle { transition: transform 0.6s var(--ease); }
+.gauge .g-needle line { stroke: var(--trace); stroke-width: 2; }
+.gauge .g-needle.oot .g-lead { stroke: var(--amber); }
+.gauge .g-needle path { fill: var(--trace); }
+.gauge .g-needle .g-se { stroke-width: 4; stroke-opacity: 0.3; }
+.gauge .g-needle.oot line { stroke: var(--amber); }
+.gauge .g-needle.oot path { fill: var(--amber); }
+.gauge .g-value { font-family: var(--font-cond); font-weight: 600; font-size: 12px; fill: #fff; }
+.gauge .g-value-box { fill: var(--trace); }
+.gauge .g-needle.oot .g-value-box { fill: var(--amber); }
+.gauge .g-lead { stroke-width: 1 !important; stroke-dasharray: 2 2; }
+
+.micro { position: relative; display: inline-block; width: 58px; height: 10px; vertical-align: middle; }
+.micro-spec { position: absolute; top: 4px; height: 2px; background: var(--line-strong); }
+.micro-nom { position: absolute; top: 1px; width: 1px; height: 8px; background: var(--ink-3); }
+.micro-val { position: absolute; top: 1px; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%; background: var(--trace); border: 1.5px solid var(--panel); }
+.micro-val.oot { background: var(--amber); }
+
+.profile .p-axis { font-size: 10px; fill: var(--ink-3); }
+.profile .p-grid { stroke: var(--grid); }
+.profile .p-int { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+.profile .p-grad { fill: none; stroke: var(--ink-3); stroke-width: 1.25; }
+.profile .p-edge line { stroke: var(--trace); stroke-width: 1.25; stroke-dasharray: 3 2; }
+.profile .p-edge text { font-size: 10.5px; fill: var(--trace); font-family: var(--font-cond); }
+.profile .p-edge.rejected line { stroke: var(--ink-3); }
+.profile .p-edge.rejected text { fill: var(--ink-3); }
+
+.spec-hist .h-spec { fill: var(--panel-2); stroke: var(--line); }
+.spec-hist .h-bar { fill: var(--series-1); }
+.spec-hist .h-bar.oot { fill: var(--amber); }
+.spec-hist .h-nom { stroke: var(--ink-3); stroke-dasharray: 2 2; }
+.spec-hist .h-base { stroke: var(--ink-3); }
+.spec-hist .h-lbl { font-size: 10px; fill: var(--ink-3); font-family: var(--font-cond); }
+
+.effect .e-zero { stroke: var(--line-strong); }
+.effect .e-ci { stroke: var(--series-muted); stroke-width: 2; stroke-linecap: round; }
+.effect .e-pt { fill: var(--series-muted); }
+.effect.sig .e-ci { stroke: var(--ink-2); }
+.effect.sig .e-pt { fill: var(--ink); }
+
+.frac { display: inline-flex; align-items: center; gap: 7px; }
+.frac-bar { width: 56px; height: 6px; background: var(--grid); border-radius: 3px; overflow: hidden; }
+.frac-bar > span { display: block; height: 100%; background: var(--ink-2); }
+.frac-bar.sig > span { background: var(--steel); }

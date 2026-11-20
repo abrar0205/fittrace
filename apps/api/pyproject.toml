@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fittrace-api"
+version = "1.0.0"
+description = "FitTrace HTTP API, ETL pipelines and job worker"
+requires-python = ">=3.11"
+dependencies = [
+  "fittrace",
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.29",
+  "sqlalchemy>=2.0.25",
+  "alembic>=1.13",
+  "psycopg[binary]>=3.1",
+  "pydantic>=2.6",
+  "pydantic-settings>=2.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "httpx>=0.27", "ruff>=0.4", "mypy>=1.9"]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
