@@ -372,9 +372,9 @@ function Dimension({ d, sx, sy, value, px, oot, deviation, location }: {
       <g transform={`translate(${mx} ${my}) rotate(${(ang * 180) / Math.PI})`}>
         <rect x={-46} y={-30} width={92} height={24} rx={2} className="dimbox" />
         <text x={0} y={-12.5} textAnchor="middle" className="dimtext">{label}</text>
-        <text x={0} y={14} textAnchor="middle" className="dimsub">
+        {Math.hypot(bx - ax, by - ay) >= 190 && <text x={0} y={14} textAnchor="middle" className="dimsub">
           {oot && deviation !== null ? `${signed(deviation)} mm, spec ${tol}` : `spec ${tol} mm`}
-        </text>
+        </text>}
       </g>
       <circle cx={p1x} cy={p1y} r={2.5} /><circle cx={p2x} cy={p2y} r={2.5} />
     </g>

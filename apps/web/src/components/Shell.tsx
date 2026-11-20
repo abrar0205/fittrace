@@ -64,7 +64,7 @@ export function Shell() {
       <aside className="rail" aria-label="Primary">
         <NavLink to="/" className="brand" aria-label="FitTrace home">
           <Logo />
-          <span>
+          <span className="brand-text">
             <span className="brand-name">FitTrace</span>
             <span className="brand-sub">Dimensional quality workbench</span>
           </span>
@@ -72,9 +72,9 @@ export function Shell() {
         <UnitSearch />
         <nav>
           {SHEETS.map((s, i) => (
-            <NavLink key={s.to} to={s.to} end={s.end} className={({ isActive }) => (isActive ? 'active' : undefined)}>
+            <NavLink key={s.to} to={s.to} end={s.end} title={s.label} className={({ isActive }) => (isActive ? 'active' : undefined)}>
               <s.icon />
-              <span>{s.label}</span>
+              <span className="nav-label">{s.label}</span>
               <span className="sheet-no" aria-label={`sheet ${i + 1}`}>{i + 1}</span>
             </NavLink>
           ))}

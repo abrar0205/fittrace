@@ -179,3 +179,38 @@
 .measure-w { width: 100%; min-width: 0; overflow: hidden; }
 .measure-w > svg { display: block; }
 .panel-body, .panel, .wb-center > *, .grid > * { min-width: 0; }
+
+/* ------------------------------------------------------------------ responsive shell */
+
+/* Laptop and tablet: the rail collapses to icons; labels stay available as tooltips. */
+@media (max-width: 1100px) {
+  :root { --rail-w: 64px; }
+  .brand { justify-content: center; padding: 0 0 18px; }
+  .brand-text, .rail-search, .rail nav .nav-label, .rail nav .sheet-no, .rail-foot a, .health span:not(.dot) { display: none; }
+  .rail nav { padding: 0 10px; }
+  .rail nav a { grid-template-columns: 1fr; justify-items: center; padding: 0; height: 40px; }
+  .rail nav a.active::before { left: -10px; }
+  .rail-foot { padding: 12px 0 0; justify-items: center; }
+  .sim-stamp { font-size: 0; gap: 0; padding: 6px; }
+  .health { justify-content: center; }
+}
+
+/* Phone: the rail becomes a sticky top bar with a horizontally scrolling sheet list. */
+@media (max-width: 760px) {
+  .shell { grid-template-columns: minmax(0, 1fr); background: var(--sheet); }
+  .rail { position: sticky; top: 0; z-index: 20; height: auto; flex-direction: row; align-items: center; gap: 4px; padding: 8px 8px; }
+  .brand { padding: 0 6px 0 2px; }
+  .brand svg { width: 26px; height: 26px; }
+  .rail nav { display: flex; overflow-x: auto; gap: 2px; padding: 0; scrollbar-width: none; min-width: 0; }
+  .rail nav::-webkit-scrollbar { display: none; }
+  .rail nav a { flex: none; width: 42px; height: 36px; }
+  .rail nav a.active::before { left: 8px; right: 8px; top: auto; bottom: -1px; width: auto; height: 3px; border-radius: 2px 2px 0 0; }
+  .rail-foot { margin: 0 0 0 auto; border: 0; padding: 0 2px; }
+  .health { display: none; }
+  .sheet { padding: 14px 12px 18px; gap: 14px; }
+  .sheet-head h1 { font-size: var(--t-xl); }
+  .panel-head { padding: 10px 12px 0; flex-wrap: wrap; }
+  .panel-body { padding: 10px 12px 12px; overflow-x: auto; }
+  .title-block { grid-template-columns: 1fr 1fr; width: 100%; }
+  .title-block .tb-name { grid-row: auto; grid-column: 1 / -1; }
+}

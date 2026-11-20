@@ -124,7 +124,7 @@ export function RowProfile({ intensity, row, edges, sigma }: {
   const pathG = grad.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Yg(v).toFixed(1)}`).join('')
   return (
     <div ref={ref} className="measure-w">
-    <svg viewBox={`0 0 ${W} ${Hi + Hg + 26}`} width={W} height={Hi + Hg + 26} className="profile" role="img"
+    <svg viewBox={`0 0 ${W} ${Hi + Hg + 40}`} width={W} height={Hi + Hg + 40} className="profile" role="img"
       aria-label={`Intensity profile of image row ${row.toFixed(0)}`}>
       <text x={0} y={12} className="p-axis">255</text>
       <text x={0} y={Hi - 4} className="p-axis">0</text>
@@ -134,14 +134,23 @@ export function RowProfile({ intensity, row, edges, sigma }: {
       <line x1={padL} x2={W - padR} y1={Yg(0)} y2={Yg(0)} className="p-grid" />
       <path d={pathG} className="p-grad" />
       <text x={0} y={Yg(0) + 4} className="p-axis">d/dx</text>
-      {edges && [edges.xl, edges.xr].map((e, i) => (
+      {edges && [edges.xl, edges.xr].map((e, i) => {
+        // Labels point away from the gap and are clamped inside the chart; when the
+        // edges are close on a narrow chart the right label drops to a second line.
+        const LW = 165
+        const leftStart = Math.max(X(edges.xl) - 4 - LW, 0)
+        const rightStart = Math.min(X(edges.xr) + 4, W - LW)
+        const stacked = leftStart + LW > rightStart
+        const lx = i ? rightStart : leftStart
+        return (
         <g key={i} className={edges.inlier ? 'p-edge' : 'p-edge rejected'}>
           <line x1={X(e)} x2={X(e)} y1={2} y2={Hi + Hg + 8} />
-          <text x={X(e) + (i ? 4 : -4)} y={Hi + Hg + 22} textAnchor={i ? 'start' : 'end'}>
+          <text x={i ? lx : lx + LW} y={Hi + Hg + 22 + (i && stacked ? 14 : 0)} textAnchor={i ? 'start' : 'end'}>
             {i ? 'right' : 'left'} edge {e.toFixed(2)} px{edges.y !== Math.round(row) ? ` (row ${edges.y})` : ''}
           </text>
         </g>
-      ))}
+        )
+      })}
     </svg>
     </div>
   )

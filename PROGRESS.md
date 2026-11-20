@@ -1,6 +1,6 @@
 # Implementation status and verification report
 
-Last updated: 19 Nov 2026. Everything below was executed in the development environment (Python 3.13, PostgreSQL 16.15, Node 22, Chrome) unless it is marked otherwise.
+Last updated: 20 Nov 2026. Everything below was executed in the development environment (Python 3.13, PostgreSQL 16.15, Node 22, Chrome) unless it is marked otherwise.
 
 ## Implemented and verified
 
@@ -17,6 +17,7 @@ Last updated: 19 Nov 2026. Everything below was executed in the development envi
 | Investigation | Recovers the demo fault: FX-202 ranked first, q < 0.0001, change point at SIM-00266 against a true start of SIM-00265; idempotent for the same trigger |
 | Contributor-recovery benchmark | 60 faulted + 20 fault-free histories; reproduced exactly from the CLI |
 | Corrective-action job | Integration test of the full queue lifecycle; live run: FX-202 −0.147 mm (CI −0.183 to −0.111), OOT 9.2% to 0%; FX-201 no effect |
+| Responsive layout | Checked at 1920, 1440, 1280, 1024 and 390 px. The rail collapses to icons at 1100 px or below and becomes a sticky top bar at 760 px or below; the workbench places the result above the image below 1280 px. A script confirms that none of the 7 sheets scrolls horizontally at 390 px |
 | Frontend: 7 sheets | Inspected in Chrome at 1440 and 1920 px; scan reveal, loupe, row profile, chart click-through and verification polling exercised; layout defects found in review were fixed (viewer overflow, scaled SVG text, label collisions, table overflow) |
 | Frontend checks | ESLint and `tsc` clean; 12 Vitest tests; 2 Playwright e2e tests pass against both the dev server and the production build served by the API |
 | Lint | `ruff check .` clean |

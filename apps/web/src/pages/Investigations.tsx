@@ -104,7 +104,8 @@ function InvestigationBody({ inv }: { inv: Investigation }) {
       shapes.push({ type: 'line', x0: k + 0.5, x1: k + 0.5, yref: 'paper', y0: 0, y1: 1, line: { color: INK, width: 1, dash: 'dash' } })
       shapes.push({ type: 'line', x0: 0.5, x1: k + 0.5, y0: cp.mean_before, y1: cp.mean_before, line: { color: INK, width: 2 } })
       shapes.push({ type: 'line', x0: k + 0.5, x1: n + 0.5, y0: cp.mean_after, y1: cp.mean_after, line: { color: INK, width: 2 } })
-      ann.push({ x: k + 0.5, yref: 'paper', y: 1, yanchor: 'bottom', text: `change point: ${cp.serial}, shift ${signed(cp.delta)} mm, p ${pval(cp.p_value)}`, showarrow: false, font: { size: 11 } })
+      // Inside the plot, beside the line, so it never collides with the legend on narrow screens.
+      ann.push({ x: k + 0.5, xanchor: 'right', xshift: -4, yref: 'paper', y: 0, yanchor: 'bottom', yshift: 16, text: `change point ${cp.serial}`, showarrow: false, font: { size: 11 } })
     }
     return { data, layout: { showlegend: true, margin: { l: 56, r: 40, t: 28, b: 38 }, shapes, annotations: ann,
       xaxis: { title: { text: 'Production sequence up to the trigger' }, range: [0, n + 2] }, yaxis: { title: { text: 'Deviation from nominal (mm)' } } } }
