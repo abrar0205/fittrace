@@ -108,6 +108,9 @@ def _ensure_reference(db: Session, manifest: dict, export: Path, dataset: m.Data
         db.execute(insert(m.ToleranceSpecification).values(
             location_id=loc_id, version=1, nominal_mm=loc["nominal_mm"], lower_tol_mm=loc["lower_tol_mm"],
             upper_tol_mm=loc["upper_tol_mm"], valid_from=datetime(2020, 1, 1, tzinfo=UTC)).on_conflict_do_nothing())
+    for p in manifest.get("paints", []):
+        db.execute(insert(m.PaintCode).values(code=p["code"], name=p["name"], metallic=bool(p.get("metallic")))
+                   .on_conflict_do_nothing())
     cam = {c: i for c, i in db.execute(select(m.Equipment.code, m.Equipment.id))}
     for row in _read_csv(export / "calibration.csv"):
         db.execute(insert(m.CalibrationRecord).values(
@@ -125,6 +128,7 @@ def _context(db: Session, dataset_id: int, unit_serials: set[str]) -> Context:
         locations=frozenset(db.scalars(select(m.MeasurementLocation.code))),
         calibrations=frozenset(db.scalars(select(m.CalibrationRecord.reference)
                                           .where(m.CalibrationRecord.dataset_id == dataset_id))),
+        paints=frozenset(db.scalars(select(m.PaintCode.code))),
     )
 
 
@@ -174,7 +178,7 @@ def _load(db: Session, export: Path, dataset: m.Dataset, run_id: int, stats: Run
 
     if rep := reports.get("units"):
         rows = [{"dataset_id": dataset.id, "serial": r["serial"], "line_id": line_ids[r["line"]], "built_at": r["built_at"],
-                 "batch_code": r["batch"], "pipeline_run_id": run_id} for r in rep.records]
+                 "batch_code": r["batch"], "paint_code": r.get("paint"), "pipeline_run_id": run_id} for r in rep.records]
         done("units", len(rows), _ins(db, m.ProductionUnit, rows, ["dataset_id", "serial"]))
     unit_ids = {s: i for s, i in db.execute(select(m.ProductionUnit.serial, m.ProductionUnit.id)
                                             .where(m.ProductionUnit.dataset_id == dataset.id))}

@@ -13,8 +13,10 @@ import pandas as pd
 from fittrace.analytics.changepoint import cusum, mean_shift
 from fittrace.analytics.contributors import rank_contributors
 
-CATEGORICAL = {"s10_fixture": "S10", "s20_fixture": "S20", "s30_tool": "S30", "batch": None, "shift": None}
-CONTINUOUS = {"clamp_pressure_bar": "S10", "weld_current_ka": "S20", "ambient_temp_c": "S20", "hinge_torque_nm": "S30"}
+CATEGORICAL = {"s10_fixture": "S10", "s20_fixture": "S20", "s30_tool": "S30", "s40_booth": "S40", "paint": None,
+               "batch": None, "shift": None}
+CONTINUOUS = {"clamp_pressure_bar": "S10", "weld_current_ka": "S20", "ambient_temp_c": "S20", "hinge_torque_nm": "S30",
+              "film_build_um": "S40", "booth_temp_c": "S40"}
 
 
 def shift_label(ts: pd.Timestamp) -> str:

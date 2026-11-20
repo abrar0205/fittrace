@@ -13,17 +13,14 @@
 .brand-name { font-family: var(--font-cond); font-weight: 600; font-size: var(--t-xl); letter-spacing: 0.01em; }
 .brand-sub { display: block; font-size: var(--t-xs); color: var(--rail-ink-dim); font-weight: 400; margin-top: 1px; }
 
-.rail-search { margin: 0 14px 16px; position: relative; }
-.rail-search input {
-  width: 100%; height: 32px; border-radius: var(--r-1); border: 1px solid #39434c; background: var(--rail-2);
-  color: #fff; padding: 0 30px 0 10px; font-size: var(--t-ui);
-}
-.rail-search input::placeholder { color: var(--rail-ink-dim); }
-.rail-search kbd {
-  position: absolute; right: 7px; top: 7px; font: 11px/16px var(--font); color: var(--rail-ink-dim);
-  border: 1px solid #45505a; border-radius: 3px; padding: 0 5px;
-}
 
+.rail-cmd {
+  margin: 0 14px 16px; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 7px 0 10px; width: calc(100% - 28px);
+  border-radius: var(--r-1); border: 1px solid #39434c; background: var(--rail-2); color: var(--rail-ink-dim); font-size: var(--t-ui); cursor: pointer;
+}
+.rail-cmd:hover { color: var(--rail-ink); border-color: #4b5762; }
+.rail-cmd-label { flex: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rail-cmd kbd { font: 11px/16px var(--font); color: var(--rail-ink-dim); border: 1px solid #45505a; border-radius: 3px; padding: 0 5px; }
 .rail nav { display: grid; gap: 1px; padding: 0 8px; }
 .rail-group { padding: 14px 12px 6px; font-size: var(--t-xs); color: var(--rail-ink-dim); }
 .rail nav a {
@@ -186,7 +183,7 @@
 @media (max-width: 1100px) {
   :root { --rail-w: 64px; }
   .brand { justify-content: center; padding: 0 0 18px; }
-  .brand-text, .rail-search, .rail nav .nav-label, .rail nav .sheet-no, .rail-foot a, .health span:not(.dot) { display: none; }
+  .brand-text, .rail-cmd-label, .rail-cmd kbd, .rail nav .nav-label, .rail nav .sheet-no, .rail-foot a, .health span:not(.dot) { display: none; }
   .rail nav { padding: 0 10px; }
   .rail nav a { grid-template-columns: 1fr; justify-items: center; padding: 0; height: 40px; }
   .rail nav a.active::before { left: -10px; }
@@ -214,3 +211,24 @@
   .title-block { grid-template-columns: 1fr 1fr; width: 100%; }
   .title-block .tb-name { grid-row: auto; grid-column: 1 / -1; }
 }
+
+/* ------------------------------------------------------------------ command palette */
+.palette-scrim { position: fixed; inset: 0; z-index: 50; background: rgba(23, 33, 42, 0.38); display: grid; justify-items: center; align-items: start; padding-top: 12vh; animation: fade 0.12s ease-out; }
+@keyframes fade { from { opacity: 0; } }
+.palette {
+  width: min(620px, calc(100vw - 24px)); background: var(--panel); border-radius: var(--r-2); overflow: hidden;
+  box-shadow: 0 24px 60px rgba(13, 20, 26, 0.35), 0 0 0 1px rgba(13, 20, 26, 0.18); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; max-height: 70vh;
+}
+.palette-input { display: flex; align-items: center; gap: 10px; padding: 0 14px; border-bottom: 1px solid var(--line); color: var(--ink-3); }
+.palette-input input { flex: 1; height: 50px; border: 0; background: transparent; font-size: var(--t-md); color: var(--ink); outline: none; }
+.palette kbd { font: 11px/16px var(--font); color: var(--ink-3); border: 1px solid var(--line-strong); border-radius: 3px; padding: 0 5px; background: var(--panel-2); }
+.palette-list { list-style: none; margin: 0; padding: 6px; overflow-y: auto; }
+.palette-group { font-size: var(--t-xs); color: var(--ink-3); padding: 10px 10px 4px; }
+.palette-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--r-1); cursor: pointer; }
+.palette-item[aria-selected='true'] { background: var(--steel-soft); box-shadow: inset 3px 0 0 var(--steel); }
+.pl-label { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-hint { margin-left: auto; color: var(--ink-3); font-size: var(--t-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55%; }
+.palette-empty { padding: 18px 12px; color: var(--ink-3); }
+.palette-foot { display: flex; gap: 16px; padding: 8px 14px; border-top: 1px solid var(--line); font-size: var(--t-xs); color: var(--ink-3); background: var(--panel-2); }
+.palette-foot kbd { margin-right: 3px; }
+@media (prefers-reduced-motion: reduce) { .palette-scrim { animation: none; } }

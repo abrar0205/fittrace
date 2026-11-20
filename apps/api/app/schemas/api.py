@@ -66,10 +66,17 @@ class LocationOut(Schema):
 # --------------------------------------------------------------------------- inspections
 
 
+class PaintOut(Schema):
+    code: str
+    name: str
+    metallic: bool
+
+
 class InspectionListItem(Schema):
     image_id: int
     serial: str
     unit_id: int
+    paint_code: str | None = None
     location: str
     captured_at: datetime
     run_status: Literal["ok", "failed"] | None
@@ -135,6 +142,7 @@ class InspectionDetail(Schema):
     image_id: int
     serial: str
     unit_id: int
+    paint: PaintOut | None
     dataset_key: str
     location: LocationOut
     captured_at: datetime
@@ -153,7 +161,8 @@ class InspectionDetail(Schema):
 class RerunRequest(Schema):
     smoothing_sigma_px: float = Field(1.5, ge=0.0, le=6.0)
     row_step: int = Field(4, ge=1, le=32)
-    min_edge_gradient: float = Field(6.0, ge=0.5, le=60.0)
+    min_edge_gradient: float = Field(2.0, ge=0.5, le=60.0)
+    edge_snr: float = Field(6.0, ge=2.0, le=30.0)
     outlier_mad_k: float = Field(3.5, ge=1.5, le=10.0)
 
 
@@ -272,6 +281,7 @@ class TraceabilityOut(Schema):
     unit_id: int
     serial: str
     batch: str
+    paint: PaintOut | None
     built_at: datetime
     line: str
     dataset_key: str

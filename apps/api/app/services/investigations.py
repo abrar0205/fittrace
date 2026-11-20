@@ -44,7 +44,7 @@ def build_frame(series: list[dict]) -> tuple[pd.DataFrame, int]:
             incomplete += 1
             continue
         rec = {"image_id": r["image_id"], "serial": r["serial"], "built_at": pd.Timestamp(r["built_at"]),
-               "batch": r["batch_code"], "shift": shift_label(pd.Timestamp(r["built_at"])),
+               "batch": r["batch_code"], "paint": r["paint_code"] or "unknown", "shift": shift_label(pd.Timestamp(r["built_at"])),
                "deviation_mm": float(r["deviation_mm"])}
         for st, col in STATION_COLUMNS.items():
             rec[col] = route[st]

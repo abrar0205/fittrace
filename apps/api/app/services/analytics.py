@@ -13,7 +13,7 @@ from app.repositories.sql import rows
 from app.services.common import dataset_out, location_dict, location_out, provenance
 from fittrace.analytics.spc import capability, imr_chart
 
-STATION_COLUMNS = {"S10": "s10_fixture", "S20": "s20_fixture", "S30": "s30_tool"}
+STATION_COLUMNS = {"S10": "s10_fixture", "S20": "s20_fixture", "S30": "s30_tool", "S40": "s40_booth"}
 
 
 def series_rows(db: Session, ds: m.Dataset, location: str, until=None) -> list[dict]:

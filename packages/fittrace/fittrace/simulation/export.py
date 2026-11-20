@@ -21,6 +21,7 @@ from pathlib import Path
 
 import numpy as np
 
+from fittrace.simulation.appearance import PAINTS
 from fittrace.simulation.factory import EQUIPMENT, LINE, LOCATIONS, MM_PER_PX, STATIONS, SimResult
 from fittrace.simulation.geometry import GENERATOR_VERSION, SceneParams, encode_png, render_panel_gap
 
@@ -116,8 +117,9 @@ def write_export(
             w.writeheader()
             w.writerows(rows)
 
-    units = [{"serial": u.serial, "line": LINE["code"], "built_at": _iso(u.built_at), "batch": u.batch} for u in res.units]
-    write_csv("units.csv", ["serial", "line", "built_at", "batch"], units)
+    units = [{"serial": u.serial, "line": LINE["code"], "built_at": _iso(u.built_at), "batch": u.batch, "paint": u.paint}
+             for u in res.units]
+    write_csv("units.csv", ["serial", "line", "built_at", "batch", "paint"], units)
 
     pe, pp, insp, gt_rows, jobs = [], [], [], [], []
     for u in res.units:
@@ -199,6 +201,7 @@ def write_export(
         "line": LINE,
         "stations": STATIONS,
         "equipment": EQUIPMENT,
+        "paints": [{"code": c, "name": v["name"], "metallic": bool(v["metallic"])} for c, v in PAINTS.items()],
         "locations": [{k: v for k, v in loc.items() if k in ("code", "name", "description", "nominal_mm",
                                                              "lower_tol_mm", "upper_tol_mm")} for loc in LOCATIONS],
         "dq_defect_rate": dq_defect_rate,

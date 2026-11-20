@@ -13,7 +13,7 @@ from fittrace.vision.gap import GapParams
 
 def _list_item(img: m.InspectionImage, unit: m.ProductionUnit, loc: m.MeasurementLocation, run: m.InspectionRun | None,
                meas: m.Measurement | None) -> dict:
-    return {"image_id": img.id, "serial": unit.serial, "unit_id": unit.id, "location": loc.code,
+    return {"image_id": img.id, "serial": unit.serial, "unit_id": unit.id, "paint_code": unit.paint_code, "location": loc.code,
             "captured_at": img.captured_at, "run_status": run.status if run else None,
             "gap_mm": meas.gap_mm if meas else None, "deviation_mm": meas.deviation_mm if meas else None,
             "tolerance_status": meas.status if meas else None, "flags": list(run.flags) if run else []}
@@ -42,6 +42,13 @@ def list_inspections(db: Session, dataset: m.Dataset, location: str | None, stat
     ordering = m.InspectionImage.captured_at.desc() if order == "desc" else m.InspectionImage.captured_at.asc()
     rows = db.execute(base.order_by(ordering, m.InspectionImage.id).offset(offset).limit(limit)).all()
     return {"items": [_list_item(*r) for r in rows], "total": total, "page": page, "page_size": page_size}
+
+
+def paint_out(db: Session, code: str | None) -> dict | None:
+    if not code:
+        return None
+    p = db.get(m.PaintCode, code)
+    return {"code": p.code, "name": p.name, "metallic": p.metallic} if p else None
 
 
 def run_out(run: m.InspectionRun, current_id: int | None) -> dict:
@@ -92,6 +99,7 @@ def get_inspection(db: Session, image_id: int) -> dict:
 
     return {
         "image_id": img.id, "serial": unit.serial, "unit_id": unit.id, "dataset_key": ds.key,
+        "paint": paint_out(db, unit.paint_code),
         "location": location_dict(db, loc), "captured_at": img.captured_at,
         "image_url": f"/api/v1/inspections/{img.id}/image", "width": img.width, "height": img.height,
         "sha256": img.sha256,

@@ -1,5 +1,5 @@
 /*
- * Line map: the simulated body-in-white line as a process flow. Each fixture or
+ * Line map: the simulated body line (body-in-white, paint shop, end-of-line inspection) as a process flow. Each fixture or
  * nutrunner tile shows the gap distribution of the units it built (p05 to p95 bar,
  * median tick, mean dot) on one scale shared by every tile, against the
  * specification window. Colours match the station comparison charts.
@@ -16,6 +16,7 @@ const STATIONS = [
   { code: 'S10', name: 'Underbody framing', kind: 'fixtures' },
   { code: 'S20', name: 'Side-aperture framing', kind: 'fixtures' },
   { code: 'S30', name: 'Door hang', kind: 'nutrunners' },
+  { code: 'S40', name: 'Paint shop', kind: 'booths' },
 ]
 
 function Strip({ g, lo, hi, loc, color }: { g: StationComparison['groups'][number]; lo: number; hi: number; loc: Location; color: string }) {
@@ -45,7 +46,8 @@ export function LineMap({ location, inspection }: {
   const s10 = useStation(location.code, 'S10')
   const s20 = useStation(location.code, 'S20')
   const s30 = useStation(location.code, 'S30')
-  const data = [s10.data, s20.data, s30.data]
+  const s40 = useStation(location.code, 'S40')
+  const data = [s10.data, s20.data, s30.data, s40.data]
   const groups = data.flatMap((d) => d?.groups ?? [])
   const lo = Math.min(location.lsl_mm, ...groups.map((g) => g.p05_mm)) - 0.08
   const hi = Math.max(location.usl_mm, ...groups.map((g) => g.p95_mm)) + 0.08

@@ -674,6 +674,7 @@ export interface components {
             serial: string;
             /** Unit Id */
             unit_id: number;
+            paint: components["schemas"]["PaintOut"] | null;
             /** Dataset Key */
             dataset_key: string;
             location: components["schemas"]["LocationOut"];
@@ -710,6 +711,8 @@ export interface components {
             serial: string;
             /** Unit Id */
             unit_id: number;
+            /** Paint Code */
+            paint_code?: string | null;
             /** Location */
             location: string;
             /**
@@ -1023,6 +1026,15 @@ export interface components {
             /** Page Size */
             page_size: number;
         };
+        /** PaintOut */
+        PaintOut: {
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+            /** Metallic */
+            metallic: boolean;
+        };
         /** PipelineErrorOut */
         PipelineErrorOut: {
             /** Id */
@@ -1168,9 +1180,14 @@ export interface components {
             row_step: number;
             /**
              * Min Edge Gradient
-             * @default 6
+             * @default 2
              */
             min_edge_gradient: number;
+            /**
+             * Edge Snr
+             * @default 6
+             */
+            edge_snr: number;
             /**
              * Outlier Mad K
              * @default 3.5
@@ -1305,6 +1322,7 @@ export interface components {
             serial: string;
             /** Batch */
             batch: string;
+            paint: components["schemas"]["PaintOut"] | null;
             /**
              * Built At
              * Format: date-time

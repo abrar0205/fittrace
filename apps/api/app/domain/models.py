@@ -70,6 +70,13 @@ class Station(Base):
     __table_args__ = (UniqueConstraint("line_id", "code"),)
 
 
+class PaintCode(Base):
+    __tablename__ = "paint_codes"
+    code: Mapped[str] = mapped_column(String(20), primary_key=True)
+    name: Mapped[str] = mapped_column(String(80))
+    metallic: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
 class Equipment(Base):
     __tablename__ = "equipment"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -78,7 +85,7 @@ class Equipment(Base):
     kind: Mapped[str] = mapped_column(String(20))
     name: Mapped[str] = mapped_column(String(200))
     station: Mapped[Station] = relationship()
-    __table_args__ = (CheckConstraint("kind in ('fixture','tool','camera')", name="ck_equipment_kind"),)
+    __table_args__ = (CheckConstraint("kind in ('fixture','tool','camera','booth')", name="ck_equipment_kind"),)
 
 
 class ProductionUnit(Base):
@@ -89,6 +96,7 @@ class ProductionUnit(Base):
     line_id: Mapped[int] = mapped_column(ForeignKey("production_lines.id"))
     built_at: Mapped[datetime] = ts()
     batch_code: Mapped[str] = mapped_column(String(40))
+    paint_code: Mapped[str | None] = mapped_column(ForeignKey("paint_codes.code"))
     pipeline_run_id: Mapped[int | None] = mapped_column(ForeignKey("pipeline_runs.id"))
     __table_args__ = (
         UniqueConstraint("dataset_id", "serial"),
