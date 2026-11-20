@@ -19,6 +19,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# The snapshot export (app.snapshot) requests the API through FastAPI's TestClient, which needs httpx.
+snapshot = ["httpx>=0.27"]
 dev = ["pytest>=8", "httpx>=0.27", "ruff>=0.4", "mypy>=1.9"]
 
 [tool.setuptools.packages.find]
