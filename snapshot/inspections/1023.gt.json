@@ -1,0 +1,1 @@
+{"image_id":1023,"available":true,"true_gap_mm":4.00976,"measured_gap_mm":4.0331009100729736,"error_um":23.340910072973564,"generator_version":"panel-gap-generator/2.0.0","note":"Ground truth comes from the image generator and is never passed to the measurement algorithm."}

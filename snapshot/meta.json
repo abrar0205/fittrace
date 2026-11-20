@@ -1,0 +1,1 @@
+{"generated_at":"2026-11-20T14:07:46+00:00","commit":"bfec2d7","run_url":"https://github.com/abrar0205/fittrace/actions/runs/44749055555","dataset":"sim-biw-demo-v1","spc_baselines":[60,80,100,120,150,200],"counts":{"inspections":1120,"units":560,"investigations":23,"verifications":22,"pipeline_runs":5}}
